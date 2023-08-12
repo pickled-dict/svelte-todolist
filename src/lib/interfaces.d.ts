@@ -5,3 +5,9 @@
     subErrors: Array<ErrorMessage> | null,
     timestamp: string
   };
+
+
+  export interface FormError {
+    field: string|number,
+    message: string
+  }
