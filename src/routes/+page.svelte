@@ -1,33 +1,22 @@
 <script lang="ts">
+  import {sendRequest} from "$lib/fetchRequests"
+	import type { ErrorMessage } from "$lib/interfaces";
+
   let email = "";
   let password = "";
   let responseError = "";
 
-  interface ErrorMessage {
-    debugMessage: string,
-    message: string,
-    status: string,
-    subErrors: Array<ErrorMessage> | null,
-    timestamp: string
-  };
-
-  async function sendRequest() {
-    fetch("http://localhost:8080/api/auth/signin", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        email,
-        password
-      }),
-    }).then(async (res) => {
+  // zod
+  async function signinRequest() {
+    sendRequest({email, password}, "POST")
+      .then(async (res) => {
         if (!res.ok) {
           const errorResponse: ErrorMessage = await res.json();
           throw new Error(errorResponse.message);
         }
         return res.json();
-      }).then(data => {
+      })
+      .then(data => {
         responseError = "";
         console.log(data)
       }).catch((err) => {
@@ -39,11 +28,6 @@
         console.error(err);
       });
   }
-
-  $: {
-    console.log(responseError)
-  };
-
 </script>
 
 <div>
@@ -66,7 +50,7 @@
             <input class="max-w-[300px]" id="password" type="password" bind:value={password} />
           </div>
           <div class="mt-3">
-            <button type="submit" class="rounded-md bg-gray-800 text-white font-bold py-1 px-3" on:click={sendRequest}>Login</button>
+            <button type="submit" class="rounded-md bg-gray-800 text-white font-bold py-1 px-3" on:click={signinRequest}>Login</button>
           </div>
           {#if responseError.length > 0}
             <div class="mt-1 text-red-600 font-bold">
