@@ -12,7 +12,7 @@ describe("FormInput Component", () => {
 
   test("when the value of bindData changes, so does the value of the input", () => {
     const inputValue = "hello world";
-    const { getByRole } = render(FormInput, {bindData: inputValue, inputErrors: []});
+    const { getByRole } = render(FormInput, {value: inputValue, inputErrors: []});
     const input = getByRole("textbox");
 
     expect(input).toHaveValue(inputValue);

@@ -4,12 +4,20 @@
   import type { FormError } from "$lib/interfaces";
   import FormInput from "../widgets/formInput.svelte";
 	import SubmitButton from "../widgets/submitButton.svelte";
+  import Cookies from "js-cookie";
 
   interface SignInErrors {
     email: Array<string>,
     password: Array<string>,
     responseError: string
   };
+
+  interface SignInResponse {
+    email: string,
+    id: number,
+    token: string,
+    type: string
+  }
 
   let emailInputBlurred = false;
   let passwordInputBlurred = false;
@@ -38,11 +46,12 @@
       if (!res.ok) {
         throw new Error((await res.json()).message);
       }
-      return res.json();
+      return res.json() as unknown as SignInResponse;
     })
     .then(data => {
       errors.responseError = "";
-      console.log(data)
+      Cookies.set('token', data.token);
+      console.log(data.token);
     }).catch((err) => {
       if (!errors.responseError.includes(err.message)) {
         errors.responseError = err.message
@@ -77,16 +86,16 @@
           <FormInput 
             label="Email"
             id="email"
-            bind:bindData={signInData.email}
+            bind:value={signInData.email}
             bind:blurred={emailInputBlurred}
-            inputErrors={errors.email}
-          />
+            inputErrors={errors.email} />
           <FormInput
             label="Password"
             id="password"
-            bind:bindData={signInData.password}
+            bind:value={signInData.password}
             bind:blurred={passwordInputBlurred}
-            inputErrors={errors.password} />
+            inputErrors={errors.password} 
+            type="password" />
           <SubmitButton disabled={buttonDisabled} action={signinRequest} text="Login" />
         {#if errors.responseError.length > 0}
           <div class="mt-1 text-red-600 font-bold">
