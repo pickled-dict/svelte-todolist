@@ -16,8 +16,8 @@
   let buttonDisabled = true;
 
   const signInFormSchema = z.object({
-    email: z.string().email().nonempty(),
-    password: z.string().nonempty()
+    email: z.string().email(),
+    password: z.string().nonempty({message: "Password must have at least 1 character"})
   })
 
   const errors: SignInErrors = {
