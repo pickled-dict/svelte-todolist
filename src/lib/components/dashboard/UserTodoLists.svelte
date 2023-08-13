@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { onMount } from "svelte";
-  import Icon from "@iconify/svelte";
+  import Icon, {loadIcons} from "@iconify/svelte";
   import Cookies from "js-cookie";
-  import { TODOLIST, sendGetRequest } from "$lib/fetchRequests";
+  import { TODOLIST, sendGetRequest, sendPostRequest } from "$lib/fetchRequests";
   import { signedIn } from "$lib/store";
+
+  loadIcons(["mingcute:add-line", "fontisto:spinner-rotate-forward"])
   
   interface Todo {
     id: number,
@@ -17,8 +19,14 @@
     todos: Array<Todo>
   }
 
+  interface MessageResponse {
+    message: string,
+  }
+
   let isSignedIn: boolean;
-  let inEditMode = false;
+  let isTodoListsLoaded: boolean;
+  let createTodoListTitle = "";
+  let inCreateMode = false;
   let todoLists: Array<TodoList> = [];
 
   function stringShorten(s: string, to: number) {
@@ -28,7 +36,7 @@
     return s
   }
 
-  function initEditMode(el: HTMLElement) {
+  function focusOnElement(el: HTMLElement) {
     el.focus()
   }
 
@@ -50,25 +58,58 @@
     }
   }
 
-  function endEditMode() {
-    inEditMode = false;
+  function endCreateMode() {
+    inCreateMode = false;
   }
 
   signedIn.subscribe((val) => {
     isSignedIn = val;
   })
 
-  onMount(async () => {
+  onMount(() => {
+    loadIcons(["mingcute:add-line", "fontisto:spinner-rotate-forward"])
+    isTodoListsLoaded = false;
     if (isSignedIn) {
-      await sendGetRequest(TODOLIST + "/all", Cookies.get("token"))
+      sendGetRequest(TODOLIST + "/all", Cookies.get("token"))
       .then((res) => res.json() as unknown as Array<TodoList>)
       .then((data) => {
         todoLists = data;
+        isTodoListsLoaded = true;
       })
       .catch((err) => console.error(err))
     }
   })
 
+	function handleCreateTodoList() {
+    if (createTodoListTitle.length === 0) {
+      alert("cannot be empty");
+      const el = document.getElementById("create-input");
+      if (el !== null) {
+        focusOnElement(el)
+      }
+      return;
+    }
+    sendPostRequest(TODOLIST, {title: createTodoListTitle}, Cookies.get("token"))
+      .then((res) => {
+        inCreateMode = false;
+        return res.json() as unknown as MessageResponse
+      })
+      .then(() => {
+        // quick and nasty todolist update
+        // will implement a store update flow
+        isTodoListsLoaded = false;
+        sendGetRequest(TODOLIST + "/all", Cookies.get("token"))
+          .then((res) => res.json() as unknown as Array<TodoList>)
+          .then((data) => {
+            todoLists = data;
+            isTodoListsLoaded = true;
+          })
+          .catch((err) => console.error(err))
+        createTodoListTitle = ""
+      }).catch((err) => {
+        console.error(err);
+      })
+	}
 </script>
 
 <div class="bg-gray-200 w-[250px] text-black">
@@ -79,7 +120,7 @@
     <div class="flex items-end">
       <button 
         class="bg-red-500 h-8 w-8 m-1 rounded-full flex justify-center items-center hover:cursor-pointer"
-        on:click={() => inEditMode = true}
+        on:click={() => inCreateMode = true}
       >
         <Icon class="text-white h-7 w-7" icon="mingcute:add-line" />
       </button>
@@ -88,33 +129,42 @@
   <div class="flex">
     <div class="flex flex-col items-start w-full">
       {#if isSignedIn}
-      {#each todoLists as tl }
-          <div class="border border-b-black w-full flex justify-between">
-            <p class="ml-1 my-[1px]">{stringShorten(tl.title, 25)}</p>
-            <div class="h-full w-[40px] flex items-center">
-              <Icon icon="mingcute:edit-2-line"  class="w-[25px] h-[25px] hover:cursor-pointer"/>
-              <Icon icon="mingcute:delete-2-line" class="w-[25px] h-[25px] hover:cursor-pointer" />
+        {#if isTodoListsLoaded}
+          {#each todoLists as tl }
+              <div class="border border-b-black w-full flex justify-between">
+                <p class="ml-1 my-[1px]">{stringShorten(tl.title, 25)}</p>
+                <div class="h-full w-[40px] flex items-center">
+                  <Icon icon="mingcute:edit-2-line"  class="w-[25px] h-[25px] hover:cursor-pointer"/>
+                  <Icon icon="mingcute:delete-2-line" class="w-[25px] h-[25px] hover:cursor-pointer" />
+                </div>
+              </div>
+          {/each}
+          {:else}
+            <div class="flex justify-center items-center w-full h-[375px]">
+              <img class="w-[40px] h-[40px] animate-spin fill-red-800" alt="spinner" src="/spinner-rotate-forward.svg" />
             </div>
-          </div>
-      {/each}
+        {/if}
       {:else}
         <p>Sign in to view saved todolists!</p>
       {/if}
-      {#if inEditMode}
-        <div class="border border-b-black w-full">
+      {#if inCreateMode}
+        <div class="border border-b-black w-full" use:clickOutside on:click_outside={endCreateMode}>
           <div class="flex justify-between">
             <div class="flex items-center">
               <input 
-                id="edit-input"
+                id="create-input"
                 placeholder="new todolist title"
                 class="bg-gray-200 w-full m-[1px] pl-1"
-                use:clickOutside
-                on:click_outside={endEditMode}
-                use:initEditMode />
+                bind:value={createTodoListTitle}
+                use:focusOnElement />
             </div>
-            <div class="h-full flex items-center mr-[1px]">
-              <Icon icon="ph:check-bold" class="w-[20px] h-[20px] hover:cursor-pointer"/>
-              <Icon icon="ph:x-bold" class="w-[20px] h-[20px] hover:cursor-pointer" on:click={endEditMode} />
+            <div class=" flex items-center mr-[1px]">
+              <button class="leading-0" on:click={handleCreateTodoList}>
+                <Icon icon="ph:check-bold" class="w-[20px] h-[20px] hover:cursor-pointer" />
+              </button>
+              <button class="leading-0" on:click={endCreateMode}>
+                <Icon icon="ph:x-bold" class="w-[20px] h-[20px] hover:cursor-pointer" />
+              </button>
             </div>
           </div>
         </div>
