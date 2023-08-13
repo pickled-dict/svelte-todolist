@@ -4,7 +4,7 @@
   import { goto } from "$app/navigation";
   import FormInput from "$lib/components/widgets/formInput.svelte";
   import SubmitButton from "$lib/components/widgets/submitButton.svelte";
-  import {sendRequest} from "$lib/fetchRequests"
+  import {AUTH, sendPostRequest} from "$lib/fetchRequests"
   import type { FormError } from "$lib/interfaces";
 
 
@@ -43,7 +43,7 @@
 
   async function signinRequest() {
     const {email, password} = signInData;
-    await sendRequest({email, password}, "POST")
+    await sendPostRequest(`${AUTH}/signin`, {email, password})
     .then(async (res) => {
       if (!res.ok) {
         throw new Error((await res.json()).message);
