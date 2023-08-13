@@ -1,12 +1,18 @@
 <script lang="ts">
-  import SignInForm from "$lib/components/forms/signInForm.svelte";
+  import {signedIn} from "$lib/store"
+
+  let isUserSignedIn: boolean;
+
+  signedIn.subscribe((val) => {
+    isUserSignedIn = val;
+  })
 </script>
 
-<div>
-  <!-- Title container -->
-  <div class="flex justify-center">
-    <h1 class="text-6xl font-bold py-4 text-white">Todo App</h1>
-  </div>
-  <SignInForm />
+<div class="text-center text-white">
+  {#if isUserSignedIn}
+    <p>Welcome, user!</p>
+    {:else}
+      <p>Not logged in</p>
+  {/if}
 </div>
 

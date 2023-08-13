@@ -1,10 +1,12 @@
 <script lang="ts">
   import { z } from "zod";
+  import Cookies from "js-cookie";
+  import { goto } from "$app/navigation";
+  import FormInput from "$lib/components/widgets/formInput.svelte";
+  import SubmitButton from "$lib/components/widgets/submitButton.svelte";
   import {sendRequest} from "$lib/fetchRequests"
   import type { FormError } from "$lib/interfaces";
-  import FormInput from "../widgets/formInput.svelte";
-	import SubmitButton from "../widgets/submitButton.svelte";
-  import Cookies from "js-cookie";
+
 
   interface SignInErrors {
     email: Array<string>,
@@ -51,7 +53,7 @@
     .then(data => {
       errors.responseError = "";
       Cookies.set('token', data.token);
-      console.log(data.token);
+      goto("/")
     }).catch((err) => {
       if (!errors.responseError.includes(err.message)) {
         errors.responseError = err.message
