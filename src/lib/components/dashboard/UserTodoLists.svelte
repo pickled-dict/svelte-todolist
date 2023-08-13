@@ -18,6 +18,7 @@
   }
 
   let isSignedIn: boolean;
+  let inEditMode = false;
   let todoLists: Array<TodoList> = [];
 
   function stringShorten(s: string, to: number) {
@@ -25,6 +26,32 @@
       return s.slice(0, to) + "..."
     }
     return s
+  }
+
+  function initEditMode(el: HTMLElement) {
+    el.focus()
+  }
+
+  function clickOutside(node: any) {
+    const handleClick = (event: Event) => {
+      if (node && !node.contains(event.target) && !event.defaultPrevented && node !== null) {
+        node.dispatchEvent(
+          new CustomEvent('click_outside')
+        )
+      }
+    }
+
+    document.addEventListener('click', handleClick, true);
+
+    return {
+      destroy() {
+        document.removeEventListener('click', handleClick, true);
+      }
+    }
+  }
+
+  function endEditMode() {
+    inEditMode = false;
   }
 
   signedIn.subscribe((val) => {
@@ -41,6 +68,7 @@
       .catch((err) => console.error(err))
     }
   })
+
 </script>
 
 <div class="bg-gray-200 w-[250px] text-black">
@@ -49,9 +77,12 @@
       <h3 class="text-2xl font-bold">Your TodoLists</h3>
     </div>
     <div class="flex items-end">
-      <div class="bg-red-500 h-8 w-8 m-1 rounded-full flex justify-center items-center hover:cursor-pointer">
+      <button 
+        class="bg-red-500 h-8 w-8 m-1 rounded-full flex justify-center items-center hover:cursor-pointer"
+        on:click={() => inEditMode = true}
+      >
         <Icon class="text-white h-7 w-7" icon="mingcute:add-line" />
-      </div>
+      </button>
     </div>
   </div>
   <div class="flex">
@@ -68,6 +99,25 @@
       {/each}
       {:else}
         <p>Sign in to view saved todolists!</p>
+      {/if}
+      {#if inEditMode}
+        <div class="border border-b-black w-full">
+          <div class="flex justify-between">
+            <div class="flex items-center">
+              <input 
+                id="edit-input"
+                placeholder="new todolist title"
+                class="bg-gray-200 w-full m-[1px] pl-1"
+                use:clickOutside
+                on:click_outside={endEditMode}
+                use:initEditMode />
+            </div>
+            <div class="h-full flex items-center mr-[1px]">
+              <Icon icon="ph:check-bold" class="w-[20px] h-[20px] hover:cursor-pointer"/>
+              <Icon icon="ph:x-bold" class="w-[20px] h-[20px] hover:cursor-pointer" on:click={endEditMode} />
+            </div>
+          </div>
+        </div>
       {/if}
     </div>
   </div>
