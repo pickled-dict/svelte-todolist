@@ -1,27 +1,10 @@
 <script lang="ts">
-  import { onMount } from "svelte";
-  import Icon, {loadIcons} from "@iconify/svelte";
+  import { beforeUpdate, onMount } from "svelte";
+  import Icon from "@iconify/svelte";
   import Cookies from "js-cookie";
-  import { TODOLIST, sendDeleteRequest, sendGetRequest, sendPostRequest, sendPutRequest } from "$lib/fetchRequests";
-  import { signedIn } from "$lib/store";
-
-  loadIcons(["mingcute:add-line", "fontisto:spinner-rotate-forward"])
-
-  interface Todo {
-    id: number,
-    content: string,
-    complete: boolean
-  }
-
-  interface TodoList {
-    id: number,
-    title: string,
-    todos: Array<Todo>
-  }
-
-  interface MessageResponse {
-    message: string,
-  }
+  import { TODOLIST, sendDeleteRequest, sendPostRequest, sendPutRequest } from "$lib/fetchRequests";
+  import { signedIn, todoLists } from "$lib/store";
+  import type { TodoList } from "$lib/interfaces";
 
   let isSignedIn: boolean;
   let isTodoListsLoaded: boolean;
@@ -30,7 +13,7 @@
   let inCreateMode = false;
   let todoListInEditMode: null | number = null;
   let todoListInDeleteMode: null | number = null;
-  let todoLists: Array<TodoList> = [];
+  let todoListsStore: Array<TodoList>;
 
   function stringShorten(s: string, to: number) {
     if (s.length > to) {
@@ -74,24 +57,6 @@
     todoListInDeleteMode = null;
   }
 
-  signedIn.subscribe((val) => {
-    isSignedIn = val;
-  })
-
-  onMount(() => {
-    loadIcons(["mingcute:add-line", "fontisto:spinner-rotate-forward"])
-    isTodoListsLoaded = false;
-    if (isSignedIn) {
-      sendGetRequest(TODOLIST + "/all", Cookies.get("token"))
-        .then((res) => res.json() as unknown as Array<TodoList>)
-        .then((data) => {
-          todoLists = data;
-          isTodoListsLoaded = true;
-        })
-        .catch((err) => console.error(err))
-    }
-  })
-
   function handleCreateTodoList() {
     if (createTodoListTitle.length === 0) {
       alert("cannot be empty");
@@ -104,18 +69,10 @@
     sendPostRequest(TODOLIST, {title: createTodoListTitle}, Cookies.get("token"))
       .then((res) => {
         inCreateMode = false;
-        return res.json() as unknown as MessageResponse
+        return res.json() as unknown as TodoList
       })
-      .then(() => {
-        // revisit, a lot of repeated code
-        isTodoListsLoaded = false;
-        sendGetRequest(TODOLIST + "/all", Cookies.get("token"))
-          .then((res) => res.json() as unknown as Array<TodoList>)
-          .then((data) => {
-            todoLists = data;
-            isTodoListsLoaded = true;
-          })
-          .catch((err) => console.error(err))
+      .then((todoList) => {
+        todoLists.set([...todoListsStore, todoList])
         createTodoListTitle = ""
       }).catch((err) => {
         console.error(err);
@@ -145,18 +102,15 @@
         endUpdateMode();
         return res.json() as unknown as TodoList
       })
-      .then(() => {
-        isTodoListsLoaded = false;
-
-        // revisit, a lot of repeated code
-        sendGetRequest(TODOLIST + "/all", Cookies.get("token"))
-          .then((res) => res.json() as unknown as Array<TodoList>)
-          .then((data) => {
-            todoLists = data;
-            isTodoListsLoaded = true;
-          })
-          .catch((err) => console.error(err))
+      .then((todoList) => {
         updateTodoListTitle = ""
+        const updatedTodoList = todoListsStore.map((tl) => {
+          if (tl.id === todoList.id) {
+            return todoList;
+          }
+          return tl;
+        })
+        todoLists.set(updatedTodoList);
       }).catch((err) => {
         console.error(err);
       })
@@ -166,28 +120,33 @@
     todoListInDeleteMode = todoListId;
   }
 
-	function confirmDelete(todoListId: number) {
+  function confirmDelete(todoListId: number) {
     sendDeleteRequest(TODOLIST + `/${todoListId}`, Cookies.get("token"))
-      .then((res) => {
-        endDeleteMode();
-        return res.json() as unknown as MessageResponse
-      })
       .then(() => {
-        isTodoListsLoaded = false;
-
-        // you get the picture
-        sendGetRequest(TODOLIST + "/all", Cookies.get("token"))
-          .then((res) => res.json() as unknown as Array<TodoList>)
-          .then((data) => {
-            todoLists = data;
-            isTodoListsLoaded = true;
-          })
-          .catch((err) => console.error(err))
+        endDeleteMode();
+        const updatedTodoLists = todoListsStore.filter((tl) => tl.id !== todoListId)
+        todoLists.set(updatedTodoLists);
         todoListInDeleteMode = null;
       }).catch((err) => {
         console.error(err);
       })
-	}
+  }
+
+  todoLists.subscribe((todoLists) => {
+    todoListsStore = todoLists;
+  })
+
+  signedIn.subscribe((val) => {
+    isSignedIn = val;
+  })
+
+  beforeUpdate(() => {
+    isTodoListsLoaded = true;
+  })
+
+  onMount(() => {
+    isTodoListsLoaded = false;
+  })
 </script>
 
 <div class="bg-gray-200 w-[250px] text-black">
@@ -198,8 +157,7 @@
     <div class="flex items-end">
       <button 
         class="bg-red-500 h-8 w-8 m-1 rounded-full flex justify-center items-center hover:cursor-pointer"
-        on:click={() => inCreateMode = true}
-      >
+        on:click={() => inCreateMode = true}>
         <Icon class="text-white h-7 w-7" icon="mingcute:add-line" />
       </button>
     </div>
@@ -208,7 +166,7 @@
     <div class="flex flex-col items-start w-full">
       {#if isSignedIn}
         {#if isTodoListsLoaded}
-          {#each todoLists as tl}
+          {#each todoListsStore as tl}
             {#if tl.id === todoListInEditMode}
               <div class="border border-b-black flex justify-between w-full" use:clickOutside on:click_outside={endUpdateMode}>
                 <div class="flex items-center">
@@ -228,7 +186,7 @@
                   </button>
                 </div>
               </div>
-            {:else if todoListInDeleteMode === tl.id}
+              {:else if todoListInDeleteMode === tl.id}
               <div class="border border-b-black flex justify-between w-full" use:clickOutside on:click_outside={endDeleteMode}>
                 <p class="ml-1 my-[1px]">Delete this todolist?</p>
                 <div class="h-full w-[40px] flex items-center">
@@ -255,8 +213,8 @@
             {/if}
           {/each}
         {:else}
-          <div class="flex justify-center items-center w-full h-[375px]">
-            <img class="w-[40px] h-[40px] animate-spin fill-red-800" alt="spinner" src="/spinner-rotate-forward.svg" />
+          <div class="mt-10 w-full flex justify-center">
+            <img class="animate-spin w-[40px] h-[40px]" src="spinner-rotate-forward.svg" alt="spinner">
           </div>
         {/if}
       {:else}
