@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { onMount } from "svelte";
+  import { onMount } from "svelte";
   import Icon, {loadIcons} from "@iconify/svelte";
   import Cookies from "js-cookie";
-  import { TODOLIST, sendGetRequest, sendPostRequest } from "$lib/fetchRequests";
+  import { TODOLIST, sendGetRequest, sendPostRequest, sendPutRequest } from "$lib/fetchRequests";
   import { signedIn } from "$lib/store";
 
   loadIcons(["mingcute:add-line", "fontisto:spinner-rotate-forward"])
-  
+
   interface Todo {
     id: number,
     content: string,
@@ -26,7 +26,9 @@
   let isSignedIn: boolean;
   let isTodoListsLoaded: boolean;
   let createTodoListTitle = "";
+  let updateTodoListTitle:string;
   let inCreateMode = false;
+  let todoListInEditMode: null | number = 4;
   let todoLists: Array<TodoList> = [];
 
   function stringShorten(s: string, to: number) {
@@ -40,6 +42,7 @@
     el.focus()
   }
 
+  // the mouse drag bug happens here, revisit
   function clickOutside(node: any) {
     const handleClick = (event: Event) => {
       if (node && !node.contains(event.target) && !event.defaultPrevented && node !== null) {
@@ -62,6 +65,10 @@
     inCreateMode = false;
   }
 
+  function endUpdateMode() {
+    todoListInEditMode = null;
+  }
+
   signedIn.subscribe((val) => {
     isSignedIn = val;
   })
@@ -71,16 +78,16 @@
     isTodoListsLoaded = false;
     if (isSignedIn) {
       sendGetRequest(TODOLIST + "/all", Cookies.get("token"))
-      .then((res) => res.json() as unknown as Array<TodoList>)
-      .then((data) => {
-        todoLists = data;
-        isTodoListsLoaded = true;
-      })
-      .catch((err) => console.error(err))
+        .then((res) => res.json() as unknown as Array<TodoList>)
+        .then((data) => {
+          todoLists = data;
+          isTodoListsLoaded = true;
+        })
+        .catch((err) => console.error(err))
     }
   })
 
-	function handleCreateTodoList() {
+  function handleCreateTodoList() {
     if (createTodoListTitle.length === 0) {
       alert("cannot be empty");
       const el = document.getElementById("create-input");
@@ -95,8 +102,7 @@
         return res.json() as unknown as MessageResponse
       })
       .then(() => {
-        // quick and nasty todolist update
-        // will implement a store update flow
+        // revisit, a lot of repeated code
         isTodoListsLoaded = false;
         sendGetRequest(TODOLIST + "/all", Cookies.get("token"))
           .then((res) => res.json() as unknown as Array<TodoList>)
@@ -109,7 +115,47 @@
       }).catch((err) => {
         console.error(err);
       })
-	}
+  }
+
+  function handleSelectTodolist(todoListId: number): void {
+    todoListInEditMode = todoListId;
+  }
+
+  function handleChangeTodoListTitle(event: Event) {
+    updateTodoListTitle = (<HTMLTextAreaElement> event.target).value;
+    console.log(updateTodoListTitle);
+  }
+
+  function handleUpdateTodoList(todoListId: number) {
+    if (updateTodoListTitle.length === 0) {
+      alert("cannot be empty");
+      const el = document.getElementById("edit-input");
+      if (el !== null) {
+        focusOnElement(el)
+      }
+      return;
+    }
+    sendPutRequest(TODOLIST + `/${todoListId}`, {title: updateTodoListTitle}, Cookies.get("token"))
+      .then((res) => {
+        endUpdateMode();
+        return res.json() as unknown as TodoList
+      })
+      .then(() => {
+        isTodoListsLoaded = false;
+
+        // revisit, a lot of repeated code
+        sendGetRequest(TODOLIST + "/all", Cookies.get("token"))
+          .then((res) => res.json() as unknown as Array<TodoList>)
+          .then((data) => {
+            todoLists = data;
+            isTodoListsLoaded = true;
+          })
+          .catch((err) => console.error(err))
+        updateTodoListTitle = ""
+      }).catch((err) => {
+        console.error(err);
+      })
+  }
 </script>
 
 <div class="bg-gray-200 w-[250px] text-black">
@@ -130,19 +176,44 @@
     <div class="flex flex-col items-start w-full">
       {#if isSignedIn}
         {#if isTodoListsLoaded}
-          {#each todoLists as tl }
+          {#each todoLists as tl}
+            {#if tl.id === todoListInEditMode}
+              <div class="border border-b-black flex justify-between w-full" use:clickOutside on:click_outside={endUpdateMode}>
+                <div class="flex items-center">
+                  <input 
+                    id="edit-input"
+                    class="bg-gray-200 m-[1px] pl-1 w-full"
+                    value={tl.title}
+                    on:input={handleChangeTodoListTitle}
+                    use:focusOnElement />
+                </div>
+                <div class="flex items-center ">
+                  <button on:click={() => handleUpdateTodoList(tl.id)}>
+                    <Icon icon="ph:check-bold" class="w-[20px] h-[20px] hover:cursor-pointer" />
+                  </button>
+                  <button on:click={endUpdateMode}>
+                    <Icon icon="ph:x-bold" class="w-[20px] h-[20px] hover:cursor-pointer" />
+                  </button>
+                </div>
+              </div>
+            {:else}
               <div class="border border-b-black w-full flex justify-between">
                 <p class="ml-1 my-[1px]">{stringShorten(tl.title, 25)}</p>
                 <div class="h-full w-[40px] flex items-center">
-                  <Icon icon="mingcute:edit-2-line"  class="w-[25px] h-[25px] hover:cursor-pointer"/>
-                  <Icon icon="mingcute:delete-2-line" class="w-[25px] h-[25px] hover:cursor-pointer" />
+                  <button class="hover:cursor-pointer" on:click={() => handleSelectTodolist(tl.id)}>
+                    <Icon icon="mingcute:edit-2-line" class="w-[20px] h-[20px]" />
+                  </button>
+                  <button class="hover:cursor-pointer">
+                    <Icon icon="mingcute:delete-2-line" class="w-[20px] h-[20px]"/>
+                  </button>
                 </div>
               </div>
+            {/if}
           {/each}
-          {:else}
-            <div class="flex justify-center items-center w-full h-[375px]">
-              <img class="w-[40px] h-[40px] animate-spin fill-red-800" alt="spinner" src="/spinner-rotate-forward.svg" />
-            </div>
+        {:else}
+          <div class="flex justify-center items-center w-full h-[375px]">
+            <img class="w-[40px] h-[40px] animate-spin fill-red-800" alt="spinner" src="/spinner-rotate-forward.svg" />
+          </div>
         {/if}
       {:else}
         <p>Sign in to view saved todolists!</p>

@@ -37,3 +37,21 @@ export async function sendGetRequest(url: string, authToken?: string, query?: st
       }
     })
 }
+
+export async function sendPutRequest(url: string, requestBody: unknown, authToken?: string) {
+  return authToken ? 
+    fetch(url, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${authToken}`
+      },
+      body: JSON.stringify(requestBody),
+    }) : fetch(url, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(requestBody),
+    })
+}
