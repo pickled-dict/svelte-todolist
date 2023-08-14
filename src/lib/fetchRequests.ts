@@ -55,3 +55,19 @@ export async function sendPutRequest(url: string, requestBody: unknown, authToke
       body: JSON.stringify(requestBody),
     })
 }
+
+export async function sendDeleteRequest(url: string, authToken?: string) {
+  return authToken ? 
+    fetch(url, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${authToken}`
+      },
+    }) : fetch(url, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json"
+      },
+    })
+}

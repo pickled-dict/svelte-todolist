@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import Icon, {loadIcons} from "@iconify/svelte";
   import Cookies from "js-cookie";
-  import { TODOLIST, sendGetRequest, sendPostRequest, sendPutRequest } from "$lib/fetchRequests";
+  import { TODOLIST, sendDeleteRequest, sendGetRequest, sendPostRequest, sendPutRequest } from "$lib/fetchRequests";
   import { signedIn } from "$lib/store";
 
   loadIcons(["mingcute:add-line", "fontisto:spinner-rotate-forward"])
@@ -28,7 +28,8 @@
   let createTodoListTitle = "";
   let updateTodoListTitle:string;
   let inCreateMode = false;
-  let todoListInEditMode: null | number = 4;
+  let todoListInEditMode: null | number = null;
+  let todoListInDeleteMode: null | number = null;
   let todoLists: Array<TodoList> = [];
 
   function stringShorten(s: string, to: number) {
@@ -67,6 +68,10 @@
 
   function endUpdateMode() {
     todoListInEditMode = null;
+  }
+
+  function endDeleteMode() {
+    todoListInDeleteMode = null;
   }
 
   signedIn.subscribe((val) => {
@@ -117,7 +122,7 @@
       })
   }
 
-  function handleSelectTodolist(todoListId: number): void {
+  function handleSelectForEdit(todoListId: number): void {
     todoListInEditMode = todoListId;
   }
 
@@ -156,6 +161,33 @@
         console.error(err);
       })
   }
+
+  function handleSelectForDelete(todoListId: number) {
+    todoListInDeleteMode = todoListId;
+  }
+
+	function confirmDelete(todoListId: number) {
+    sendDeleteRequest(TODOLIST + `/${todoListId}`, Cookies.get("token"))
+      .then((res) => {
+        endDeleteMode();
+        return res.json() as unknown as MessageResponse
+      })
+      .then(() => {
+        isTodoListsLoaded = false;
+
+        // you get the picture
+        sendGetRequest(TODOLIST + "/all", Cookies.get("token"))
+          .then((res) => res.json() as unknown as Array<TodoList>)
+          .then((data) => {
+            todoLists = data;
+            isTodoListsLoaded = true;
+          })
+          .catch((err) => console.error(err))
+        todoListInDeleteMode = null;
+      }).catch((err) => {
+        console.error(err);
+      })
+	}
 </script>
 
 <div class="bg-gray-200 w-[250px] text-black">
@@ -196,14 +228,26 @@
                   </button>
                 </div>
               </div>
+            {:else if todoListInDeleteMode === tl.id}
+              <div class="border border-b-black flex justify-between w-full" use:clickOutside on:click_outside={endDeleteMode}>
+                <p class="ml-1 my-[1px]">Delete this todolist?</p>
+                <div class="h-full w-[40px] flex items-center">
+                  <button class="hover:cursor-pointer" on:click={() => confirmDelete(tl.id)}>
+                    <Icon icon="mingcute:delete-2-line" class="w-[20px] h-[20px]"/>
+                  </button>
+                  <button class="hover:cursor-pointer" on:click={endDeleteMode}>
+                    <Icon icon="ph:x-bold" class="w-[20px] h-[20px]" />
+                  </button>
+                </div>
+              </div>
             {:else}
               <div class="border border-b-black w-full flex justify-between">
                 <p class="ml-1 my-[1px]">{stringShorten(tl.title, 25)}</p>
                 <div class="h-full w-[40px] flex items-center">
-                  <button class="hover:cursor-pointer" on:click={() => handleSelectTodolist(tl.id)}>
+                  <button class="hover:cursor-pointer" on:click={() => handleSelectForEdit(tl.id)}>
                     <Icon icon="mingcute:edit-2-line" class="w-[20px] h-[20px]" />
                   </button>
-                  <button class="hover:cursor-pointer">
+                  <button class="hover:cursor-pointer" on:click={() => handleSelectForDelete(tl.id)}>
                     <Icon icon="mingcute:delete-2-line" class="w-[20px] h-[20px]"/>
                   </button>
                 </div>
