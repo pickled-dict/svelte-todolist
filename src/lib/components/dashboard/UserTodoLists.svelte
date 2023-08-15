@@ -3,7 +3,7 @@
   import Icon from "@iconify/svelte";
   import Cookies from "js-cookie";
   import { TODOLIST, sendDeleteRequest, sendPostRequest, sendPutRequest } from "$lib/fetchRequests";
-  import { signedIn, todoLists } from "$lib/store";
+  import { signedIn, todoLists, currentTodoList } from "$lib/store";
   import type { TodoList } from "$lib/interfaces";
   import { clickOutside } from "$lib/eventFunctions";
 
@@ -113,6 +113,13 @@
       })
   }
 
+	function handleTodoListSelected(todoListId: number) {
+    const selected = todoListsStore.find((tl) => tl.id === todoListId)
+    if (selected) {
+      currentTodoList.set(selected)
+    }
+	}
+
   todoLists.subscribe((todoLists) => {
     todoListsStore = todoLists;
   })
@@ -181,7 +188,9 @@
               </div>
             {:else}
               <div class="border border-b-black w-full flex justify-between bg-gray-200">
-                <p class="ml-1 my-[1px]">{stringShorten(tl.title, 25)}</p>
+                <button class="ml-1 my-[1px] w-full hover:cursor-pointer text-left" on:click={() => handleTodoListSelected(tl.id)}>
+                  {stringShorten(tl.title, 25)}
+                </button>
                 <div class="h-full w-[40px] flex items-center">
                   <button class="hover:cursor-pointer" on:click={() => handleSelectForEdit(tl.id)}>
                     <Icon icon="mingcute:edit-2-line" class="w-[20px] h-[20px]" />
