@@ -6,6 +6,7 @@
   import { signedIn, todoLists, currentTodoList } from "$lib/store";
   import type { TodoList } from "$lib/interfaces";
   import { clickOutside } from "$lib/eventFunctions";
+	import { focusOnElement, stringShorten } from "$lib/utils";
 
   let isSignedIn: boolean;
   let isTodoListsLoaded: boolean;
@@ -15,17 +16,6 @@
   let todoListInEditMode: null | number = null;
   let todoListInDeleteMode: null | number = null;
   let todoListsStore: Array<TodoList>;
-
-  function stringShorten(s: string, to: number) {
-    if (s.length > to) {
-      return s.slice(0, to) + "..."
-    }
-    return s
-  }
-
-  function focusOnElement(el: HTMLElement) {
-    el.focus()
-  }
 
   function endCreateMode() {
     inCreateMode = false;
@@ -162,6 +152,7 @@
                     id="edit-input"
                     class="bg-gray-200 m-[1px] pl-1 w-full"
                     value={tl.title}
+                    on:focusin={() => updateTodoListTitle = tl.title}
                     on:input={handleChangeTodoListTitle}
                     use:focusOnElement />
                 </div>

@@ -132,6 +132,7 @@
                   id="edit-input"
                   class="bg-gray-200 m-[1px] pl-1 w-full"
                   value={todo.content}
+                  on:focusin={() => updateTodoContent = todo.content}
                   on:input={handleChangeTodoTitle}
                   use:focusOnElement />
               </div>
