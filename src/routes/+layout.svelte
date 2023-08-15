@@ -1,6 +1,6 @@
 <script lang="ts">
   import Cookies from "js-cookie"
-  import { signedIn } from "$lib/store"
+  import { signedIn, currentTodoList, defaultTodoList } from "$lib/store"
   import "../app.css"
 
   let isSignedIn: boolean;
@@ -8,6 +8,7 @@
   function handleLogoutClicked() {
     Cookies.remove('token');
     signedIn.set(false);
+    currentTodoList.set(structuredClone(defaultTodoList));
   }
 
   signedIn.subscribe((val) => {
