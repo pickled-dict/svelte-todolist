@@ -130,7 +130,7 @@
   })
 </script>
 
-<div class="bg-gray-200 w-[250px] text-black">
+<div class="bg-gray-100 w-[450px] text-black">
   <div class="flex h-14 bg-gray-100 border border-b-black justify-between">
     <div class="flex items-center ml-2">
       <h3 class="text-2xl font-bold">Your TodoLists</h3>
@@ -180,7 +180,7 @@
                 </div>
               </div>
             {:else}
-              <div class="border border-b-black w-full flex justify-between">
+              <div class="border border-b-black w-full flex justify-between bg-gray-200">
                 <p class="ml-1 my-[1px]">{stringShorten(tl.title, 25)}</p>
                 <div class="h-full w-[40px] flex items-center">
                   <button class="hover:cursor-pointer" on:click={() => handleSelectForEdit(tl.id)}>
