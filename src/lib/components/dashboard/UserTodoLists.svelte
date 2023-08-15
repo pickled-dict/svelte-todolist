@@ -5,6 +5,7 @@
   import { TODOLIST, sendDeleteRequest, sendPostRequest, sendPutRequest } from "$lib/fetchRequests";
   import { signedIn, todoLists } from "$lib/store";
   import type { TodoList } from "$lib/interfaces";
+  import { clickOutside } from "$lib/eventFunctions";
 
   let isSignedIn: boolean;
   let isTodoListsLoaded: boolean;
@@ -24,25 +25,6 @@
 
   function focusOnElement(el: HTMLElement) {
     el.focus()
-  }
-
-  // the mouse drag bug happens here, revisit
-  function clickOutside(node: any) {
-    const handleClick = (event: Event) => {
-      if (node && !node.contains(event.target) && !event.defaultPrevented && node !== null) {
-        node.dispatchEvent(
-          new CustomEvent('click_outside')
-        )
-      }
-    }
-
-    document.addEventListener('click', handleClick, true);
-
-    return {
-      destroy() {
-        document.removeEventListener('click', handleClick, true);
-      }
-    }
   }
 
   function endCreateMode() {
@@ -85,7 +67,6 @@
 
   function handleChangeTodoListTitle(event: Event) {
     updateTodoListTitle = (<HTMLTextAreaElement> event.target).value;
-    console.log(updateTodoListTitle);
   }
 
   function handleUpdateTodoList(todoListId: number) {
@@ -188,7 +169,7 @@
               </div>
               {:else if todoListInDeleteMode === tl.id}
               <div class="border border-b-black flex justify-between w-full" use:clickOutside on:click_outside={endDeleteMode}>
-                <p class="ml-1 my-[1px]">Delete this todolist?</p>
+                <p class="ml-1 my-[1px] text-red-500 font-bold">Delete this todolist?</p>
                 <div class="h-full w-[40px] flex items-center">
                   <button class="hover:cursor-pointer" on:click={() => confirmDelete(tl.id)}>
                     <Icon icon="mingcute:delete-2-line" class="w-[20px] h-[20px]"/>
