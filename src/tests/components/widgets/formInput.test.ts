@@ -4,7 +4,7 @@ import { render, screen } from "@testing-library/svelte";
 
 describe("FormInput Component", () => {
   test("should render the component", () => {
-    render(FormInput, {bindData: "", inputErrors: []});
+    render(FormInput, {value: "", inputErrors: []});
 
     const labelNode = screen.getByText(/Input/i);
     expect(labelNode);
@@ -19,14 +19,14 @@ describe("FormInput Component", () => {
   })
 
   test("when no errors exist and input is blurred, display no errors", () => {
-    const { queryAllByTestId } = render(FormInput, {bindData: "", blurred: true, inputErrors: []});
+    const { queryAllByTestId } = render(FormInput, {value: "", blurred: true, inputErrors: []});
     const errorContainer = queryAllByTestId('input-error');
 
     expect(errorContainer.length).toEqual(0);
   })
 
   test("when errors exist and input is blurred, display errors", async () => {
-    const { findAllByTestId, getByText } = render(FormInput, {bindData: "", blurred: true, inputErrors: ["error"]});
+    const { findAllByTestId, getByText } = render(FormInput, {value: "", blurred: true, inputErrors: ["error"]});
     const errorContainer = await findAllByTestId('input-error');
     const errorElement = getByText(/error/i)
 
@@ -35,7 +35,7 @@ describe("FormInput Component", () => {
   })
 
   test("when errors exist and input is not blurred, do not display errors", () => {
-    const { queryAllByTestId } = render(FormInput, {bindData: "", blurred: false, inputErrors: ["error"]});
+    const { queryAllByTestId } = render(FormInput, {value: "", blurred: false, inputErrors: ["error"]});
     const errorContainer = queryAllByTestId('input-error');
 
     expect(errorContainer.length).toEqual(0);

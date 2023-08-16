@@ -259,7 +259,7 @@
           on:input={handleChangeTodoListTitle}
           use:focusOnElement />
           <div class="flex items-center">
-            <button on:click={() => handleUpdateTodoListTitle(todoList.id)}>
+            <button data-testid="todolist-edit-title-submit" on:click={() => handleUpdateTodoListTitle(todoList.id)}>
               <Icon icon="ph:check-bold" class="w-[20px] h-[20px]" />
             </button>
             <button on:click={() => todoListTitleInEditMode = false}>
@@ -270,7 +270,7 @@
     </div>
   {:else}
     <div class="flex h-[63px] w-full justify-center items-center bg-gray-100 border border-b-black border-l-black">
-      <button class="relative top-2 left-[2px] mr-1" on:click={() => todoListTitleInEditMode = true}>
+      <button data-testid="todolist-edit-title" class="relative top-2 left-[2px] mr-1" on:click={() => todoListTitleInEditMode = true}>
         <Icon class="w-[20px] h-[20px]" icon="tabler:edit" />
       </button>
       <h3 class="text-2xl font-bold">{stringShorten(todoList.title, 25)}</h3>
