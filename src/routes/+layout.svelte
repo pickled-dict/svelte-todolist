@@ -1,6 +1,7 @@
 <script lang="ts">
   import Cookies from "js-cookie"
-  import { signedIn, currentTodoList, defaultTodoList } from "$lib/store"
+  import { signedIn, currentTodoList } from "$lib/store"
+  import { defaultTodoList } from "$lib/utils"
   import "../app.css"
 
   let isSignedIn: boolean;

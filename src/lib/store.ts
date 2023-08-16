@@ -1,11 +1,6 @@
 import { writable, type Writable } from "svelte/store";
 import type { TodoList } from "./interfaces";
-
-export const defaultTodoList: TodoList = {
-  id: 0,
-  title: "Default TodoList",
-  todos: []
-}
+import { defaultTodoList } from "./utils";
 
 export const signedIn = writable(false);
 export const todoLists: Writable<TodoList[] | never[]> = writable([]);

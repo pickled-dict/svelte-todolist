@@ -1,3 +1,11 @@
+import type { TodoList } from "./interfaces"
+
+export const defaultTodoList: TodoList = {
+  id: 0,
+  title: "Default TodoList",
+  todos: []
+}
+
 export function focusOnElement(el: HTMLElement) {
   el.focus()
 }

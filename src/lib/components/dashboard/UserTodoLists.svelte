@@ -3,10 +3,10 @@
   import Icon from "@iconify/svelte";
   import Cookies from "js-cookie";
   import { TODOLIST, sendDeleteRequest, sendPostRequest, sendPutRequest } from "$lib/fetchRequests";
-  import { signedIn, todoLists, currentTodoList, defaultTodoList } from "$lib/store";
+  import { signedIn, todoLists, currentTodoList } from "$lib/store";
   import type { TodoList } from "$lib/interfaces";
   import { clickOutside } from "$lib/eventFunctions";
-	import { focusOnElement, stringShorten } from "$lib/utils";
+	import { focusOnElement, stringShorten, defaultTodoList } from "$lib/utils";
 
   let isSignedIn: boolean;
   let isTodoListsLoaded: boolean;
@@ -45,7 +45,6 @@
         return res.json() as unknown as TodoList
       })
       .then((todoList) => {
-        console.log(todoList);
         todoLists.set([...todoListsStore, todoList])
         todoList.todos = [];
         currentTodoList.set(todoList)

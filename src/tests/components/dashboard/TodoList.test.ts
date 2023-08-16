@@ -1,19 +1,38 @@
 import TodoList from "$lib/components/dashboard/TodoList.svelte"
-import { describe, test, expect, vi } from "vitest";
-import { fireEvent, render } from "@testing-library/svelte";
-import { writable } from "svelte/store";
-import { defaultTodoList } from "$lib/store";
+import { describe, test, expect, vi, afterEach } from "vitest";
+import { cleanup, fireEvent, render } from "@testing-library/svelte";
+import { defaultTodoList } from "$lib/utils";
 
-const alertMock = vi.spyOn(window, 'alert').mockImplementation(() => null);
-const mockCurrentTodoListWritable = writable<TodoList>();
+describe("Default todolist with unauthorized user", async () => {
+  const { mockCurrentTodoListStore, mockSignedInStore, mockTodoListsStore } = await vi.hoisted(() => import("../../mocks/store.mocks"));
+  const alertMock = vi.spyOn(window, 'alert').mockImplementation(() => null);
 
-export const mockCurrentTodoListStore = {
-  subscribe: mockCurrentTodoListWritable.subscribe,
-  set: vi.fn(),
-  mockSetSubscribeValue: (value: TodoList): void => mockCurrentTodoListWritable.set(value)
-}
+  // setup
+  beforeAll(() => {
+    vi.mock("../../../lib/store", async () => ({
+      currentTodoList: mockCurrentTodoListStore,
+      signedIn: mockSignedInStore,
+      todoLists: mockTodoListsStore
+    }));
+  })
 
-describe("Default todolist with unauthorized user", () => {
+  afterEach(() => {
+    cleanup()
+    mockCurrentTodoListStore.mockSetSubscribeValue(defaultTodoList)
+  })
+
+  // util functions
+  function startWithSingleTodo() {
+    const alteredTodoList = defaultTodoList
+    alteredTodoList.todos.push({
+      id: 1,
+      content: "fresh todo",
+      complete: false
+    })
+    mockCurrentTodoListStore.mockSetSubscribeValue(alteredTodoList)
+  }
+
+  // tests start
   test("should render the component", () => {
     const {getByText} = render(TodoList);
     const defaultTodoListTitle = getByText(/default todolist/i)
@@ -48,5 +67,15 @@ describe("Default todolist with unauthorized user", () => {
     await fireEvent.click(submit);
 
     expect(alertMock).toHaveBeenCalled();
+  })
+
+  test("setting todo in todolist manually will render a todo", () => {
+    // add a todo to mocked todolist with content "fresh todo"
+    startWithSingleTodo()
+
+    const {getByText} = render(TodoList);
+    const newTodo = getByText(/fresh todo/i)
+
+    expect(newTodo).toBeInTheDocument()
   })
 })
