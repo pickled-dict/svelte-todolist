@@ -3,7 +3,7 @@
   import Icon from "@iconify/svelte";
   import Cookies from "js-cookie";
   import { TODOLIST, sendDeleteRequest, sendPostRequest, sendPutRequest } from "$lib/fetchRequests";
-  import { signedIn, todoLists, currentTodoList } from "$lib/store";
+  import { signedIn, todoLists, currentTodoList, defaultTodoList } from "$lib/store";
   import type { TodoList } from "$lib/interfaces";
   import { clickOutside } from "$lib/eventFunctions";
 	import { focusOnElement, stringShorten } from "$lib/utils";
@@ -16,6 +16,7 @@
   let todoListInEditMode: null | number = null;
   let todoListInDeleteMode: null | number = null;
   let todoListsStore: Array<TodoList>;
+  let currentTodoListStore: TodoList;
 
   function endCreateMode() {
     inCreateMode = false;
@@ -44,7 +45,10 @@
         return res.json() as unknown as TodoList
       })
       .then((todoList) => {
+        console.log(todoList);
         todoLists.set([...todoListsStore, todoList])
+        todoList.todos = [];
+        currentTodoList.set(todoList)
         createTodoListTitle = ""
       }).catch((err) => {
         console.error(err);
@@ -98,6 +102,16 @@
         const updatedTodoLists = todoListsStore.filter((tl) => tl.id !== todoListId)
         todoLists.set(updatedTodoLists);
         todoListInDeleteMode = null;
+
+        if (currentTodoListStore.id === todoListId) {
+          const selectedTodoList = todoListsStore.at(0);
+          if (selectedTodoList) {
+            currentTodoList.set(selectedTodoList)
+          } else {
+            currentTodoList.set(structuredClone(defaultTodoList))
+          }
+        }
+
       }).catch((err) => {
         console.error(err);
       })
@@ -116,6 +130,10 @@
 
   signedIn.subscribe((val) => {
     isSignedIn = val;
+  })
+
+  currentTodoList.subscribe(curTodoList => {
+    currentTodoListStore = curTodoList;
   })
 
   beforeUpdate(() => {
