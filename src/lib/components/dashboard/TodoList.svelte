@@ -3,7 +3,7 @@
   import Cookies from "js-cookie";
   import { clickOutside } from "$lib/eventFunctions";
 	import { API_URL, TODO, sendPostRequest, sendPutRequest, sendDeleteRequest, TODOLIST } from "$lib/fetchRequests";
-  import type { MessageResponse, Todo, TodoList } from "$lib/interfaces";
+  import type { Todo, TodoList } from "$lib/interfaces";
   import { currentTodoList, signedIn, todoLists } from "$lib/store"
   import { focusOnElement, stringShorten } from "$lib/utils";
 
@@ -249,6 +249,7 @@
 <div class="w-full h-full bg-gray-100 flex flex-col">
   {#if todoListTitleInEditMode}
     <div 
+      data-testid="todolist-container" 
       class="flex h-[63px] w-full justify-center items-center bg-gray-100 border border-b-black border-l-black">
       <div class="flex justify-between" use:clickOutside on:click_outside={() => todoListTitleInEditMode = false}>
         <input 
@@ -262,7 +263,7 @@
             <button data-testid="todolist-edit-title-submit" on:click={() => handleUpdateTodoListTitle(todoList.id)}>
               <Icon icon="ph:check-bold" class="w-[20px] h-[20px]" />
             </button>
-            <button on:click={() => todoListTitleInEditMode = false}>
+            <button data-testid="todolist-edit-title-end" on:click={() => todoListTitleInEditMode = false}>
               <Icon icon="ph:x-bold" class="w-[20px] h-[20px]" />
             </button>
           </div>
@@ -274,7 +275,7 @@
         <Icon class="w-[20px] h-[20px]" icon="tabler:edit" />
       </button>
       <h3 class="text-2xl font-bold">{stringShorten(todoList.title, 25)}</h3>
-      <button class="ml-2" on:click={() => inCreateMode = true}>
+      <button data-testid="todolist-add-todo" class="ml-2" on:click={() => inCreateMode = true}>
         <Icon class="text-red-500 w-[20px] h-[20px]" icon="ph:plus-fill" />
       </button>
       {#if signedInStore && todoList.id === 0}
@@ -293,6 +294,7 @@
               <div class="mx-2 my-[1px] flex justify-between" use:clickOutside on:click_outside={() => todoInEditMode = null}>
                 <div class="border border-b-black flex justify-between w-full">
                   <input 
+                    data-testid="todo-edit-input"
                     id="edit-input"
                     class="bg-gray-200 m-[1px] pl-1 w-full"
                     value={todo.content}
@@ -301,10 +303,10 @@
                     use:focusOnElement />
                 </div>
                 <div class="flex items-center">
-                  <button on:click={() => handleUpdateTodo(todo.id)}>
+                  <button data-testid="confirm-edit-todo" on:click={() => handleUpdateTodo(todo.id)}>
                     <Icon icon="ph:check-bold" class="w-[20px] h-[20px]" />
                   </button>
-                  <button on:click={() => todoInEditMode = null}>
+                  <button data-testid="exit-edit-todo" on:click={() => todoInEditMode = null}>
                     <Icon icon="ph:x-bold" class="w-[20px] h-[20px]" />
                   </button>
                 </div>
@@ -314,10 +316,10 @@
                 <p class="text-red-500 font-bold">Delete this todo?</p>
 
                 <div class="h-full w-[40px] flex items-center">
-                  <button class="hover:cursor-pointer" on:click={() => handleDeleteTodo(todo.id)}>
+                  <button data-testid="confirm-delete-todo" class="hover:cursor-pointer" on:click={() => handleDeleteTodo(todo.id)}>
                     <Icon icon="mingcute:delete-2-line" class="w-[20px] h-[20px]"/>
                   </button>
-                  <button class="hover:cursor-pointer" on:click={() => todoInDeleteMode = null}>
+                  <button data-testid="exit-delete-todo" class="hover:cursor-pointer" on:click={() => todoInDeleteMode = null}>
                     <Icon icon="ph:x-bold" class="w-[20px] h-[20px]" />
                   </button>
                 </div>
@@ -325,18 +327,18 @@
             {:else}
               <div class="mx-2 my-[1px] flex justify-between">
                 {#if todo.complete}
-                  <button class="w-full text-left line-through" on:click={() => handleToggleComplete(todo.id)}>{todo.content}</button>
+                  <button data-testid="todo-content-complete" class="w-full text-left line-through" on:click={() => handleToggleComplete(todo.id)}>{todo.content}</button>
                 {:else}
-                  <button class="w-full text-left" on:click={() => handleToggleComplete(todo.id)}>{todo.content}</button>
+                  <button data-testid="todo-content-not-complete" class="w-full text-left" on:click={() => handleToggleComplete(todo.id)}>{todo.content}</button>
                 {/if}
                 <div class="flex items-center">
-                  <button class="hover:cursor-pointer" on:click={() => handleToggleComplete(todo.id)}>
+                  <button data-testid="todo-content-complete-button" class="hover:cursor-pointer" on:click={() => handleToggleComplete(todo.id)}>
                     <Icon icon="zondicons:checkmark" class="w-[20px] h-[20px]"/>
                   </button>
-                  <button class="hover:cursor-pointer" on:click={() => todoInEditMode = todo.id}>
+                  <button data-testid="todo-edit-todo" class="hover:cursor-pointer" on:click={() => todoInEditMode = todo.id}>
                     <Icon icon="mingcute:edit-2-line" class="w-[20px] h-[20px]" />
                   </button>
-                  <button class="hover:cursor-pointer" on:click={() => todoInDeleteMode = todo.id}>
+                  <button data-testid="todo-delete-button" class="hover:cursor-pointer" on:click={() => todoInDeleteMode = todo.id}>
                     <Icon icon="mingcute:delete-2-line" class="w-[20px] h-[20px]"/>
                   </button>
                 </div>
@@ -350,16 +352,17 @@
           <div class="border border-b-black flex justify-between w-full">
             <input 
               id="create-input"
+              data-testid="create-input"
               class="bg-gray-200 m-[1px] pl-1 w-full"
               placeholder="new todo title"
               on:input={handleChangeNewTodoTitle}
               use:focusOnElement />
           </div>
           <div class="flex items-center">
-            <button on:click={createNewTodo}>
+            <button data-testid="submit-create-todo" on:click={createNewTodo}>
               <Icon icon="ph:check-bold" class="w-[20px] h-[20px]" />
             </button>
-            <button on:click={() => inCreateMode = false}>
+            <button data-testid="end-create-todo" on:click={() => inCreateMode = false}>
               <Icon icon="ph:x-bold" class="w-[20px] h-[20px]" />
             </button>
           </div>

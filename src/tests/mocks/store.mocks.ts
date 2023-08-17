@@ -3,7 +3,7 @@ import { writable } from "svelte/store";
 import { vi } from "vitest";
 import { defaultTodoList } from "$lib/utils";
 
-const mockCurrentTodoListWritable = writable<TodoList>(defaultTodoList);
+const mockCurrentTodoListWritable = writable<TodoList>(structuredClone(defaultTodoList));
 export const mockCurrentTodoListStore = {
   subscribe: mockCurrentTodoListWritable.subscribe,
   set: vi.fn(),
