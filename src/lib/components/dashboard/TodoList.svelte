@@ -225,11 +225,10 @@
       sendPutRequest(`${TODOLIST}/${id}`, {
         title: updateTodoListTitle
       }, Cookies.get("token")).then(async (res) => {
-          await res.json().then((data) => {
+          await res.json().then(() => {
             todoList.title = updateTodoListTitle;
             currentTodoList.set(todoList);
             todoLists.set(alteredTodoLists);
-            console.log(data);
           })
         }).catch((err) => console.error(err))
     } else {
@@ -278,7 +277,7 @@
       <button data-testid="todolist-add-todo" class="ml-2" on:click={() => inCreateMode = true}>
         <Icon class="text-red-500 w-[20px] h-[20px]" icon="ph:plus-fill" />
       </button>
-      {#if signedInStore && todoList.id === 0}
+      {#if signedInStore && isDefaultTodoList(todoList)}
         <button on:click={handleSaveTodoList}>
           <Icon class="text-red-500 w-[20px] h-[20px]" icon="material-symbols:save" />
         </button>

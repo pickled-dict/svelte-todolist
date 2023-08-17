@@ -3,7 +3,7 @@ import { signedIn } from "$lib/store";
 import Cookies from "js-cookie";
 import type { PageLoadEvent } from "./$types";
 import type { TodoList } from "$lib/interfaces";
-import { todoLists } from "$lib/store";
+import { todoLists, currentTodoList } from "$lib/store";
 
 export async function load({parent, data}: PageLoadEvent) {
   await parent();
@@ -14,6 +14,9 @@ export async function load({parent, data}: PageLoadEvent) {
     sendGetRequest(TODOLIST + "/all", Cookies.get("token"))
       .then((res) => res.json() as unknown as Array<TodoList>)
       .then((data) => {
+        if (data.length > 0) {
+          currentTodoList.set(data[0])
+        }
         todoLists.set(data);
       })
       .catch((err) => console.error(err))

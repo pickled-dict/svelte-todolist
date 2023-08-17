@@ -1,9 +1,10 @@
 import TodoList from "$lib/components/dashboard/TodoList.svelte"
 import { describe, test, expect, vi, afterEach } from "vitest";
-import { cleanup, fireEvent, render } from "@testing-library/svelte";
+import { cleanup, fireEvent, render, waitFor } from "@testing-library/svelte";
 import { defaultTodoList } from "$lib/utils";
+import { mockedTodoLists, restHandlers, server } from "../../mocks/api";
 
-describe("Default todolist with unauthorized user", async () => {
+describe("All TodoList Tests", async () => {
   const { mockCurrentTodoListStore, mockSignedInStore, mockTodoListsStore } = await vi.hoisted(() => import("../../mocks/store.mocks"));
 
   // setup
@@ -13,12 +14,16 @@ describe("Default todolist with unauthorized user", async () => {
       signedIn: mockSignedInStore,
       todoLists: mockTodoListsStore
     }));
+    server.listen();
   })
 
   afterEach(() => {
     cleanup()
     mockCurrentTodoListStore.mockSetSubscribeValue(structuredClone(defaultTodoList))
+    server.resetHandlers()
   })
+
+  afterAll(() => server.close())
 
   // util functions
   function startWithSingleTodo() {
@@ -29,6 +34,12 @@ describe("Default todolist with unauthorized user", async () => {
       complete: false
     })
     mockCurrentTodoListStore.mockSetSubscribeValue(alteredTodoList)
+  }
+
+  function mockUserTodoLists() {
+    mockSignedInStore.mockSetSubscribeValue(true);
+    mockTodoListsStore.mockSetSubscribeValue(structuredClone(mockedTodoLists));
+    mockCurrentTodoListStore.mockSetSubscribeValue(structuredClone(mockedTodoLists)[0])
   }
 
   // tests start
@@ -278,5 +289,58 @@ describe("Default todolist with unauthorized user", async () => {
     const todoContentComplete = getByTestId("todo-content-complete");
     expect(todoContentComplete).toBeInTheDocument();
   })
+
+  test("change todolist title while signed in", async () => {
+    mockUserTodoLists();
+
+    const {getByTestId, getByRole, findByText} = render(TodoList);
+    const editTitleButton = getByTestId("todolist-edit-title");
+    await fireEvent.click(editTitleButton);
+
+    const input = getByRole("textbox");
+    const submit = getByTestId("todolist-edit-title-submit");
+    await fireEvent.input(input, {target: {value: "new title"}});
+    await fireEvent.click(submit);
+
+    const newTitle = await findByText("new title");
+
+    expect(newTitle).toBeInTheDocument();
+  })
+
+  // test("add todo to todolist while signed in", async () => {
+  //   mockUserTodoLists();
+  //
+  //   const {getByTestId, findByText, debug} = render(TodoList);
+  //   const createTodoButton = getByTestId("todolist-add-todo");
+  //
+  //   await fireEvent.click(createTodoButton);
+  //   const createTodoInput = getByTestId("create-input");
+  //   await fireEvent.input(createTodoInput, {target: {value: "my new todo"}});
+  //
+  //   const submitNewTodoButton = getByTestId("submit-create-todo");
+  //   await fireEvent.click(submitNewTodoButton);
+  //
+  //
+  //   waitFor(() => findByText("my new todo"));
+  //   mockTodoListsStore.subscribe(val => console.log(val))
+  //
+  //   expect(newTodo).toBeInTheDocument();
+  // });
+
+  // test("delete todo works while signed in", async () => {
+  //   mockUserTodoLists();
+  //   const {getByTestId, findByText, debug} = render(TodoList);
+  //
+  //   const deleteModeButton = getByTestId("todo-delete-button");
+  //   await fireEvent.click(deleteModeButton);
+  //   const submitDeleteTodo = getByTestId("confirm-delete-todo");
+  //   await fireEvent.click(submitDeleteTodo);
+  //
+  //   const deletedTodo = await findByText("some todo");
+  //
+  //   mockCurrentTodoListStore.subscribe(val => console.log(val))
+  //
+  //   expect(deletedTodo).not.toBeInTheDocument();
+  // })
 })
 
