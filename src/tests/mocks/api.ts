@@ -1,6 +1,7 @@
 import { setupServer } from "msw/node"
 import { rest } from "msw"
-import type { Todo, TodoList } from "$lib/interfaces"
+import type { Todo } from "$lib/interfaces"
+import { AUTH_ROUTE } from "$lib/constants"
 
 export const mockedTodoLists = [
   {
@@ -17,7 +18,7 @@ export const mockedTodoLists = [
 ]
 
 export const restHandlers = [
-  rest.post("http://localhost:8080/api/auth", async (req, res, ctx) => {
+  rest.post(AUTH_ROUTE, async (req, res, ctx) => {
     return res(ctx.status(200), ctx.json({someResponse: "hello"}))
   }),
   rest.post("http://localhost:8080/api/auth/signin", async(req, res, ctx) => {

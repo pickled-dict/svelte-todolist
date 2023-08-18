@@ -2,10 +2,11 @@
   import Icon from "@iconify/svelte";
   import Cookies from "js-cookie";
   import { clickOutside } from "$lib/eventFunctions";
-	import { API_URL, TODO, sendPostRequest, sendPutRequest, sendDeleteRequest, TODOLIST } from "$lib/fetchRequests";
+	import { sendPostRequest, sendPutRequest, sendDeleteRequest} from "$lib/fetchRequests";
   import type { Todo, TodoList } from "$lib/interfaces";
   import { currentTodoList, signedIn, todoLists } from "$lib/store"
   import { focusOnElement, stringShorten } from "$lib/utils";
+  import {API_URL, TODO_ROUTE, TODOLIST_ROUTE} from "$lib/constants"
 
   // state declarations
   let todoList: TodoList;
@@ -73,7 +74,7 @@
     if (!isDefaultTodoList(todoList)) {
       const curTodo = todoList.todos.find(td => td.id === todoId);
       if (curTodo) {
-        sendPutRequest(`${TODO}/${todoId}`, {
+        sendPutRequest(`${TODO_ROUTE}/${todoId}`, {
           content: updateTodoContent,
           complete: curTodo.complete
         }, Cookies.get("token"))
@@ -105,7 +106,7 @@
   function handleDeleteTodo(id: number) {
     const alteredTodos = todoList.todos.filter(td => td.id !== id)
     if (!isDefaultTodoList(todoList)) {
-      sendDeleteRequest(`${TODO}/${id}`, Cookies.get("token"))
+      sendDeleteRequest(`${TODO_ROUTE}/${id}`, Cookies.get("token"))
         .then(async (res) => {
           await res.json().then(() => {
             todoList.todos = alteredTodos;
@@ -184,7 +185,7 @@
     if (!isDefaultTodoList(todoList)) {
       const currentTodo = todoList.todos.find(td => td.id === id)
       if (currentTodo) {
-        sendPutRequest(`${TODO}/${id}`, {
+        sendPutRequest(`${TODO_ROUTE}/${id}`, {
           content: currentTodo.content,
           complete: !currentTodo.complete
         }, Cookies.get("token"))
@@ -222,7 +223,7 @@
         }
         return tl;
       })
-      sendPutRequest(`${TODOLIST}/${id}`, {
+      sendPutRequest(`${TODOLIST_ROUTE}/${id}`, {
         title: updateTodoListTitle
       }, Cookies.get("token")).then(async (res) => {
           await res.json().then(() => {

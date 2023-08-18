@@ -1,3 +1,4 @@
+import { AUTH_ROUTE } from "$lib/constants";
 import type { PageServerLoadEvent } from "./$types";
 
 export async function load({cookies, fetch}: PageServerLoadEvent) {
@@ -11,7 +12,7 @@ export async function load({cookies, fetch}: PageServerLoadEvent) {
   }
 
   // verify if cookie is valid on the server
-  return await fetch("http://localhost:8080/api/auth", {
+  return await fetch(AUTH_ROUTE, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"

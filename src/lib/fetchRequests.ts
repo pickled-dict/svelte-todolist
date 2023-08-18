@@ -1,8 +1,3 @@
-export const API_URL = "http://localhost:8080";
-export const AUTH = API_URL + "/api/auth";
-export const TODOLIST = API_URL + "/api/todolist";
-export const TODO = API_URL + "/api/todo";
-
 export async function sendPostRequest(url: string, requestBody: unknown, authToken?: string) {
   return authToken ? 
     fetch(url, {

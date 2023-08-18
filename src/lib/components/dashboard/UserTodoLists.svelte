@@ -2,11 +2,12 @@
   import { beforeUpdate, onMount } from "svelte";
   import Icon from "@iconify/svelte";
   import Cookies from "js-cookie";
-  import { TODOLIST, sendDeleteRequest, sendPostRequest, sendPutRequest } from "$lib/fetchRequests";
+  import { sendDeleteRequest, sendPostRequest, sendPutRequest } from "$lib/fetchRequests";
   import { signedIn, todoLists, currentTodoList } from "$lib/store";
   import type { TodoList } from "$lib/interfaces";
   import { clickOutside } from "$lib/eventFunctions";
 	import { focusOnElement, stringShorten, defaultTodoList } from "$lib/utils";
+  import { TODOLIST_ROUTE } from "$lib/constants";
 
   let isSignedIn: boolean;
   let isTodoListsLoaded: boolean;
@@ -39,7 +40,7 @@
       }
       return;
     }
-    sendPostRequest(TODOLIST, {title: createTodoListTitle}, Cookies.get("token"))
+    sendPostRequest(TODOLIST_ROUTE, {title: createTodoListTitle}, Cookies.get("token"))
       .then((res) => {
         inCreateMode = false;
         return res.json() as unknown as TodoList
@@ -71,7 +72,7 @@
       }
       return;
     }
-    sendPutRequest(TODOLIST + `/${todoListId}`, {title: updateTodoListTitle}, Cookies.get("token"))
+    sendPutRequest(TODOLIST_ROUTE + `/${todoListId}`, {title: updateTodoListTitle}, Cookies.get("token"))
       .then((res) => {
         endUpdateMode();
         return res.json() as unknown as TodoList
@@ -95,7 +96,7 @@
   }
 
   function confirmDelete(todoListId: number) {
-    sendDeleteRequest(TODOLIST + `/${todoListId}`, Cookies.get("token"))
+    sendDeleteRequest(TODOLIST_ROUTE + `/${todoListId}`, Cookies.get("token"))
       .then(() => {
         endDeleteMode();
         const updatedTodoLists = todoListsStore.filter((tl) => tl.id !== todoListId)
