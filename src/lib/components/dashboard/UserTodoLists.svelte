@@ -157,7 +157,7 @@
         {#if isTodoListsLoaded}
           <!-- if todoLists is empty and not in create mode, display "please add a todolist", else continue -->
           {#if todoListsStore.length === 0 && !inCreateTodoListMode}
-            <p class="m-2">You have no saved todos! press the button above to make some!</p>
+            <p class="m-2">You have no saved todos! press the "+" button above to make some!</p>
           {:else}
             <!-- If all conditions met, show todolists -->
             {#each todoListsStore as tl}
