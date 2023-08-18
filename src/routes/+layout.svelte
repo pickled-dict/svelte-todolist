@@ -30,6 +30,8 @@
       {:else}
       <span>|</span>
       <a class="underline" href="/login">Login</a>
+      <span>|</span>
+      <a class="underline" href="/signup">Sign Up</a>
     {/if}
   </div>
 </div>
