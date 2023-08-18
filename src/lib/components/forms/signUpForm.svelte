@@ -1,8 +1,11 @@
 <script lang="ts">
 	import { z } from "zod";
 	import FormInput from "../widgets/formInput.svelte";
-	import type { FormError } from "$lib/interfaces";
+	import type { FormError, MessageResponse } from "$lib/interfaces";
 	import SubmitButton from "../widgets/submitButton.svelte";
+	import { sendPostRequest } from "$lib/fetchRequests";
+	import { AUTH_ROUTE } from "$lib/constants";
+	import { goto } from "$app/navigation";
 
   interface SignupErrors {
     email: Array<string>,
@@ -64,8 +67,24 @@
   }
 
 	function signUpRequest(): void {
-		console.log("Signup!");
-	}
+    sendPostRequest(`${AUTH_ROUTE}/signup`, {
+      email: signUpData.email,
+      password: signUpData.password
+    }).then(async res => {
+        if (!res.ok) {
+          throw new Error((await res.json()).message);
+        }
+        return res.json();
+      }).then(() => {
+        errors.responseError = "";
+        goto("/login")
+      })
+      .catch((err) => {
+        if (!errors.responseError.includes(err.message)) {
+          errors.responseError = err.message
+        }
+        console.error(err);
+      })}
 
 </script>
 <div class="flex justify-center py-4">
