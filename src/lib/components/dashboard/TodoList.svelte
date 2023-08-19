@@ -8,6 +8,22 @@
   import { focusOnElement, stringShorten } from "$lib/utils";
   import {API_URL, TODO_ROUTE, TODOLIST_ROUTE} from "$lib/constants"
 
+  interface TodoDto {
+    content: string,
+    complete?: boolean
+  }
+
+  interface SaveTodoListDto {
+    title: string,
+    todos: TodoDto[]
+  }
+
+  interface SaveTodoListResponse {
+    id: number,
+    title: string,
+    todos: Todo[]
+  }
+
   // === local state
   let inCreateTodoMode = false;
   let inEditTodoListTitleMode = false;
@@ -240,7 +256,19 @@
 
   // Save todolist to user todolists
   function handleSaveTodoList() {
-    throw new Error("Function not implemented.");
+    const todoDto: TodoDto[] = currentTodoListStore.todos.map((td) => ({content: td.content, complete: td.complete}));
+    const newTodoList: SaveTodoListDto = {
+      title: currentTodoListStore.title,
+      todos: todoDto
+    };
+
+    sendPostRequest(`${TODOLIST_ROUTE}/save`, newTodoList, Cookies.get("token"))
+      .then(async res => {
+        const result = await res.json();
+        currentTodoList.set(result);
+        todoLists.set([...todoListsStore, result]);
+      })
+      .catch(err => console.error(err))
   }
 </script>
 
