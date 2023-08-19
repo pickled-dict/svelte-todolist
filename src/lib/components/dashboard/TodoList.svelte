@@ -288,7 +288,7 @@
   <!-- Main Todos block -->
   <div class="w-full h-full flex justify-center border border-l-black bg-gray-200 overflow-y-scroll">
     <div class="h-full w-[400px] bg-gray-100">
-      {#if currentTodoListStore.todos}
+      {#if currentTodoListStore.todos.length > 0 || inCreateTodoMode}
         <!-- Show todos -->
         {#each currentTodoListStore.todos as todo}
           <div class="w-full border border-b-gray-300">
@@ -351,6 +351,8 @@
             {/if}
           </div>
         {/each}
+        {:else}
+        <p class="m-2 leading-5">This TodoList has no todos! Click the "+" button to add some!</p>
       {/if}
       <!-- logic for handling "create todo" mode -->
       {#if inCreateTodoMode} 
