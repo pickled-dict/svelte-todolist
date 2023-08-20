@@ -2,14 +2,13 @@
   import { beforeUpdate, onMount } from "svelte";
   import Icon from "@iconify/svelte";
   import Cookies from "js-cookie";
-  import type { TodoList } from "$lib/interfaces";
+  import type { TodoList, ButtonOptions } from "$lib/interfaces";
   import { sendDeleteRequest, sendPostRequest, sendPutRequest } from "$lib/fetchRequests";
   import { signedIn, todoLists, currentTodoList } from "$lib/store";
   import { clickOutside } from "$lib/eventFunctions";
   import { focusOnElement, stringShorten, defaultTodoList } from "$lib/utils";
   import { TODOLIST_ROUTE } from "$lib/constants";
 	import OptionsWidget from "../widgets/optionsWidget.svelte";
-
 
   // === local state
   let isTodoListsLoaded: boolean;
@@ -101,6 +100,11 @@
           }
           return tl;
         })
+
+        if (todoListId === currentTodoListStore.id) {
+          currentTodoList.set(todoList);
+        }
+
         todoLists.set(updatedTodoList);
       }).catch((err) => {
         console.error(err);
@@ -127,6 +131,51 @@
         console.error(err);
       })
   }
+
+  // === buttons and mode options
+  const todoListInEditModeOptions = (todoListId: number): ButtonOptions[] => [
+    {
+      tooltip: "Confirm edit todolist",
+      icon: "ph:check-bold",
+      callback: (e: Event) => confirmUpdateTodoList(e, todoListId),
+      submits: true
+    },
+    {
+      tooltip: "Cancel edit",
+      icon: "ph:x-bold", callback: () => todoListInEditMode = null
+    }
+  ]
+
+  const todoListInDeleteModeOptions = (todoListId: number): ButtonOptions[] => [
+    {
+      tooltip: "Confirm delete todolist",
+      icon: "mingcute:delete-2-line",
+      callback: () => confirmDeleteTodoList(todoListId)
+    },
+    {
+      tooltip: "Cancel deleting",
+      icon: "ph:x-bold",
+      callback: () => todoListInDeleteMode = null
+    }
+  ]
+
+  const defaultTodoListOptions = (todoListId: number): ButtonOptions[] => [
+    {
+      tooltip: "Edit todolist title",
+      icon: "mingcute:edit-2-line",
+      callback: () => todoListInEditMode = todoListId
+    },
+    {
+      tooltip: "Delete this todolist",
+      icon: "mingcute:delete-2-line",
+      callback: () => todoListInDeleteMode = todoListId
+    }
+  ]
+
+  const inCreateTodoListModeOptions: ButtonOptions[] = [
+    {tooltip: "Confirm create todolist", icon: "ph:check-bold", callback: confirmCreateTodoList, submits: true},
+    {tooltip: "Exit create mode todolist", icon: "ph:x-bold", callback: () => inCreateTodoListMode = false}
+  ]
 
   // === lifetime functions for handling whether todolists are loaded or not
   beforeUpdate(() => {
@@ -178,19 +227,13 @@
                       on:input={handleChangeTodoListTitle}
                       use:focusOnElement />
                   </div>
-                  <OptionsWidget options={[
-                    {tooltip: "Confirm edit todolist", icon: "ph:check-bold", callback: (e) => confirmUpdateTodoList(e, tl.id), submits: true},
-                    {tooltip: "Cancel edit", icon: "ph:x-bold", callback: () => todoListInEditMode = null}
-                  ]} />
+                  <OptionsWidget options={todoListInEditModeOptions(tl.id)} />
                 </form>
                 <!-- If todolist selected for delete do: -->
                 {:else if todoListInDeleteMode === tl.id}
                 <div class="border border-b-black flex justify-between w-full" use:clickOutside on:click_outside={() => todoListInDeleteMode = null}>
                   <p class="ml-1 my-[1px] text-red-500 font-bold">Delete this todolist?</p>
-                  <OptionsWidget options={[
-                    {tooltip: "Confirm delete todolist", icon: "mingcute:delete-2-line", callback: () => confirmDeleteTodoList(tl.id)},
-                    {tooltip: "Cancel deleting", icon: "ph:x-bold", callback: () => todoListInDeleteMode = null}
-                  ]} />
+                  <OptionsWidget options={todoListInDeleteModeOptions(tl.id)} />
                 </div>
                 <!-- else display in its default state -->
               {:else}
@@ -198,10 +241,7 @@
                   <button class="ml-1 my-[1px] w-full hover:cursor-pointer text-left" on:click={() => handleTodoListSelected(tl.id)}>
                     {stringShorten(tl.title, 25)}
                   </button>
-                  <OptionsWidget options={[
-                    {tooltip: "Edit todolist title", icon: "mingcute:edit-2-line", callback: () => todoListInEditMode = tl.id},
-                    {tooltip: "Delete this todolist", icon: "mingcute:delete-2-line", callback: () => todoListInDeleteMode = tl.id}
-                  ]} />
+                  <OptionsWidget options={defaultTodoListOptions(tl.id)} />
                 </div>
               {/if}
             {/each}
@@ -227,10 +267,7 @@
                 use:focusOnElement />
             </div>
             <div class=" flex items-center mr-[1px]">
-              <OptionsWidget options={[
-                {tooltip: "Confirm create todolist", icon: "ph:check-bold", callback: confirmCreateTodoList, submits: true},
-                {tooltip: "Exit create mode todolist", icon: "ph:x-bold", callback: () => inCreateTodoListMode = false}
-              ]} />
+              <OptionsWidget options={inCreateTodoListModeOptions} />
             </div>
           </form>
         </div>

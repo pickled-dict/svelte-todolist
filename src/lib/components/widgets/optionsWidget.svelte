@@ -1,16 +1,11 @@
 <script lang="ts">
 	import Icon from "@iconify/svelte";
-  interface Option {
-    tooltip: string,
-    icon: string,
-    callback: (...args: any[]) => void,
-    testId?: string,
-    submits?: boolean
-  }
-  export let options: Option[];
+  import type {ButtonOptions} from "$lib/interfaces";
+
+  export let options: ButtonOptions[];
 </script>
 
-<div class="h-full w-[40px] flex items-center">
+<div class="flex items-center">
   {#each options as option}
     {#if option.submits && option.testId === null}
       <button type="submit" title={option.tooltip} class="hover:cursor-pointer" on:click={option.callback}>

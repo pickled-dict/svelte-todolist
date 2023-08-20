@@ -1,12 +1,13 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
   import Cookies from "js-cookie";
+  import type { ButtonOptions, Todo, TodoList } from "$lib/interfaces";
   import { clickOutside } from "$lib/eventFunctions";
 	import { sendPostRequest, sendPutRequest, sendDeleteRequest} from "$lib/fetchRequests";
-  import type { Todo, TodoList } from "$lib/interfaces";
   import { currentTodoList, signedIn, todoLists } from "$lib/store"
   import { focusOnElement, stringShorten } from "$lib/utils";
   import {API_URL, TODO_ROUTE, TODOLIST_ROUTE} from "$lib/constants"
+	import OptionsWidget from "../widgets/optionsWidget.svelte";
 
   interface TodoDto {
     content: string,
@@ -16,12 +17,6 @@
   interface SaveTodoListDto {
     title: string,
     todos: TodoDto[]
-  }
-
-  interface SaveTodoListResponse {
-    id: number,
-    title: string,
-    todos: Todo[]
   }
 
   // === local state
@@ -71,7 +66,8 @@
   }
 
   // === handler functions
-  function confirmUpdateTodo(todoId: number) {
+  function confirmUpdateTodo(e:Event, todoId: number) {
+    e.preventDefault();
     if (updateTodoContent.length === 0) {
       alert("cannot be empty");
       const el = document.getElementById("edit-input");
@@ -120,7 +116,8 @@
     todoInEditMode = null;
   }
 
-  function confirmDeleteTodo(id: number) {
+  function confirmDeleteTodo(e:Event, id: number) {
+    e.preventDefault();
     const alteredTodos = currentTodoListStore.todos.filter(td => td.id !== id)
     if (!isDefaultTodoList(currentTodoListStore)) {
       sendDeleteRequest(`${TODO_ROUTE}/${id}`, Cookies.get("token"))
@@ -139,7 +136,8 @@
     todoInDeleteMode = null;
   }
 
-	function confirmCreateTodo() {
+	function confirmCreateTodo(e: Event) {
+    e.preventDefault();
     if (newTodoContent.length === 0) {
       alert("cannot be empty");
       const el = document.getElementById("create-input");
@@ -188,7 +186,9 @@
     newTodoContent = "";
 	}
 
-  function confirmUpdateTodoListTitle(id: number) {
+  function confirmUpdateTodoListTitle(e: Event, id: number) {
+    console.log(`from todolist: ${id}`);
+    e.preventDefault();
     if (updateTodoListTitle.length === 0) {
       alert("cannot be empty");
       const el = document.getElementById("edit-title-input");
@@ -236,14 +236,11 @@
       if (currentTodo) {
         sendPutRequest(`${TODO_ROUTE}/${id}`, {
           content: currentTodo.content,
-          complete: !currentTodo.complete
+          complete: currentTodo.complete
         }, Cookies.get("token"))
-          .then(async (res) => {
-            await res.json()
-            .then(() => {
-              currentTodoListStore.todos = alteredTodos;
-              currentTodoList.set(currentTodoListStore);
-            })
+          .then(() => {
+            currentTodoListStore.todos = alteredTodos;
+            currentTodoList.set(currentTodoListStore);
           }).catch(err => console.error(err))
       } else {
         console.error("Something went wrong while toggling complete")
@@ -270,6 +267,91 @@
       })
       .catch(err => console.error(err))
   }
+
+  // === buttons and mode options
+  const editTodoListTitleOptions: ButtonOptions[] = [
+    {
+      testId: "todolist-edit-title-submit",
+      tooltip: "Confirm edit todolist title",
+      icon: "ph:check-bold",
+      callback: (e: Event) => confirmUpdateTodoListTitle(e, currentTodoListStore.id), submits: true
+    },
+    {
+      testId: "todolist-edit-title-end",
+      tooltip: "Cancel edit",
+      icon: "ph:x-bold",
+      callback: () => inEditTodoListTitleMode = false
+    }
+  ]
+
+  const todoInEditModeOptions = (todoId: number): ButtonOptions[] => [
+    {
+      testId: "confirm-edit-todo",
+      tooltip: "Confirm edit todo",
+      icon: "ph:check-bold",
+      callback: (e: Event) => confirmUpdateTodo(e, todoId),
+      submits: true
+    },
+    {
+      testId: "exit-edit-todo",
+      tooltip: "Cancel edit",
+      icon: "ph:x-bold",
+      callback: () => todoInEditMode = null
+    }
+  ]
+
+  const todoInDeleteModeOptions = (todoId: number): ButtonOptions[] => [
+    {
+      testId: "confirm-delete-todo",
+      tooltip: "Confirm delete todo",
+      icon: "ph:check-bold",
+      callback: (e: Event) => confirmDeleteTodo(e, todoId),
+      submits: true
+    },
+    {
+      testId: "exit-delete-todo",
+      tooltip: "Cancel delete",
+      icon: "ph:x-bold",
+      callback: () => todoInDeleteMode = null
+    }
+  ]
+
+  const defaultTodoOptions = (todoId: number): ButtonOptions[] => [
+    {
+      testId: "todo-content-complete-button",
+      tooltip: "Mark todo as complete",
+      icon: "zondicons:checkmark",
+      callback: () => handleToggleComplete(todoId)
+    },
+    {
+      testId: "todo-edit-todo",
+      tooltip: "Edit this todo",
+      icon: "mingcute:edit-2-line",
+      callback: () => todoInEditMode = todoId
+    },
+    {
+      testId: "todo-delete-button",
+      tooltip: "Delete this todo",
+      icon: "mingcute:delete-2-line",
+      callback: () => todoInDeleteMode = todoId
+    }
+  ]
+
+  const createTodoOptions: ButtonOptions[] = [
+    {
+      testId: "submit-create-todo",
+      tooltip: "Confirm create todo",
+      icon: "ph:check-bold",
+      callback: (e: Event) => confirmCreateTodo(e),
+      submits: true
+    },
+    {
+      testId: "end-create-todo",
+      tooltip: "Cancel create todo",
+      icon: "ph:x-bold",
+      callback: () => inCreateTodoMode = false
+    }
+  ]
 </script>
 
 <!-- TodoList Container Block -->
@@ -279,7 +361,7 @@
     <div 
       data-testid="todolist-container" 
       class="flex h-[63px] w-full justify-center items-center bg-gray-100 border border-b-black border-l-black">
-      <div class="flex justify-between" use:clickOutside on:click_outside={() => inEditTodoListTitleMode = false}>
+      <form class="flex justify-between" use:clickOutside on:click_outside={() => inEditTodoListTitleMode = false}>
         <input 
           id="edit-title-input"
           class="bg-gray-200 m-[1px] pl-1"
@@ -288,26 +370,21 @@
           on:input={handleChangeTodoListTitle}
           use:focusOnElement />
           <div class="flex items-center">
-            <button data-testid="todolist-edit-title-submit" on:click={() => confirmUpdateTodoListTitle(currentTodoListStore.id)}>
-              <Icon icon="ph:check-bold" class="w-[20px] h-[20px]" />
-            </button>
-            <button data-testid="todolist-edit-title-end" on:click={() => inEditTodoListTitleMode = false}>
-              <Icon icon="ph:x-bold" class="w-[20px] h-[20px]" />
-            </button>
+            <OptionsWidget options={editTodoListTitleOptions} />
           </div>
-      </div>
+      </form>
     </div>
   {:else}
     <div class="flex h-[63px] w-full justify-center items-center bg-gray-100 border border-b-black border-l-black">
-      <button data-testid="todolist-edit-title" class="relative top-2 left-[2px] mr-1" on:click={() => inEditTodoListTitleMode = true}>
+      <button title="Edit todolist title" data-testid="todolist-edit-title" class="relative top-2 left-[2px] mr-1" on:click={() => inEditTodoListTitleMode = true}>
         <Icon class="w-[20px] h-[20px]" icon="tabler:edit" />
       </button>
       <h3 class="text-2xl font-bold">{stringShorten(currentTodoListStore.title, 25)}</h3>
-      <button data-testid="todolist-add-todo" class="ml-2" on:click={() => inCreateTodoMode = true}>
+      <button title="Create a todo" data-testid="todolist-add-todo" class="ml-2" on:click={() => inCreateTodoMode = true}>
         <Icon class="text-red-500 w-[20px] h-[20px]" icon="ph:plus-fill" />
       </button>
       {#if signedInStore && isDefaultTodoList(currentTodoListStore)}
-        <button on:click={handleSaveTodoList}>
+        <button title="Save this todolist" on:click={handleSaveTodoList}>
           <Icon class="text-red-500 w-[20px] h-[20px]" icon="material-symbols:save" />
         </button>
       {/if}
@@ -322,7 +399,7 @@
           <div class="w-full border border-b-gray-300">
             <!-- if todo is in edit mode, do: -->
             {#if todoInEditMode === todo.id}
-              <div class="mx-2 my-[1px] flex justify-between" use:clickOutside on:click_outside={() => todoInEditMode = null}>
+              <form class="mx-2 my-[1px] flex justify-between" use:clickOutside on:click_outside={() => todoInEditMode = null}>
                 <div class="border border-b-black flex justify-between w-full">
                   <input 
                     data-testid="todo-edit-input"
@@ -334,26 +411,15 @@
                     use:focusOnElement />
                 </div>
                 <div class="flex items-center">
-                  <button data-testid="confirm-edit-todo" on:click={() => confirmUpdateTodo(todo.id)}>
-                    <Icon icon="ph:check-bold" class="w-[20px] h-[20px]" />
-                  </button>
-                  <button data-testid="exit-edit-todo" on:click={() => todoInEditMode = null}>
-                    <Icon icon="ph:x-bold" class="w-[20px] h-[20px]" />
-                  </button>
+                  <OptionsWidget options={todoInEditModeOptions(todo.id)} />
                 </div>
-              </div>
+              </form>
               <!-- else if todo is in delete mode, do: -->
               {:else if todoInDeleteMode === todo.id}
               <div class="mx-2 my-[1px] flex justify-between" use:clickOutside on:click_outside={() => todoInDeleteMode = null}>
                 <p class="text-red-500 font-bold">Delete this todo?</p>
-
                 <div class="h-full w-[40px] flex items-center">
-                  <button data-testid="confirm-delete-todo" class="hover:cursor-pointer" on:click={() => confirmDeleteTodo(todo.id)}>
-                    <Icon icon="mingcute:delete-2-line" class="w-[20px] h-[20px]"/>
-                  </button>
-                  <button data-testid="exit-delete-todo" class="hover:cursor-pointer" on:click={() => todoInDeleteMode = null}>
-                    <Icon icon="ph:x-bold" class="w-[20px] h-[20px]" />
-                  </button>
+                  <OptionsWidget options={todoInDeleteModeOptions(todo.id)} />
                 </div>
               </div>
               <!-- Else display todo with options -->
@@ -365,15 +431,7 @@
                   <button data-testid="todo-content-not-complete" class="w-full text-left" on:click={() => handleToggleComplete(todo.id)}>{todo.content}</button>
                 {/if}
                 <div class="flex items-center">
-                  <button data-testid="todo-content-complete-button" class="hover:cursor-pointer" on:click={() => handleToggleComplete(todo.id)}>
-                    <Icon icon="zondicons:checkmark" class="w-[20px] h-[20px]"/>
-                  </button>
-                  <button data-testid="todo-edit-todo" class="hover:cursor-pointer" on:click={() => todoInEditMode = todo.id}>
-                    <Icon icon="mingcute:edit-2-line" class="w-[20px] h-[20px]" />
-                  </button>
-                  <button data-testid="todo-delete-button" class="hover:cursor-pointer" on:click={() => todoInDeleteMode = todo.id}>
-                    <Icon icon="mingcute:delete-2-line" class="w-[20px] h-[20px]"/>
-                  </button>
+                  <OptionsWidget options={defaultTodoOptions(todo.id)} />
                 </div>
               </div>
             {/if}
@@ -384,7 +442,7 @@
       {/if}
       <!-- logic for handling "create todo" mode -->
       {#if inCreateTodoMode} 
-        <div class="mx-2 my-[1px] flex justify-between" use:clickOutside on:click_outside={() => {inCreateTodoMode = false}}>
+        <form class="mx-2 my-[1px] flex justify-between" use:clickOutside on:click_outside={() => {inCreateTodoMode = false}}>
           <div class="border border-b-black flex justify-between w-full">
             <input 
               id="create-input"
@@ -395,14 +453,9 @@
               use:focusOnElement />
           </div>
           <div class="flex items-center">
-            <button data-testid="submit-create-todo" on:click={confirmCreateTodo}>
-              <Icon icon="ph:check-bold" class="w-[20px] h-[20px]" />
-            </button>
-            <button data-testid="end-create-todo" on:click={() => inCreateTodoMode = false}>
-              <Icon icon="ph:x-bold" class="w-[20px] h-[20px]" />
-            </button>
+            <OptionsWidget options={createTodoOptions} />
           </div>
-        </div>
+        </form>
       {/if}
     </div>
   </div>

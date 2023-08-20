@@ -26,3 +26,11 @@ export interface TodoList {
 export interface MessageResponse {
   message: string,
 }
+
+export interface ButtonOptions {
+  tooltip: string,
+  icon: string,
+  callback: (...args: any[]) => void,
+  testId?: string,
+  submits?: boolean
+}
