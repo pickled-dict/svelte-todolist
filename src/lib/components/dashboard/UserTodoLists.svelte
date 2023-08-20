@@ -8,6 +8,7 @@
   import { clickOutside } from "$lib/eventFunctions";
   import { focusOnElement, stringShorten, defaultTodoList } from "$lib/utils";
   import { TODOLIST_ROUTE } from "$lib/constants";
+	import OptionsWidget from "../widgets/optionsWidget.svelte";
 
 
   // === local state
@@ -51,10 +52,12 @@
   }
 
   // === handler functions for extended logic (fetch requests)
-  function confirmCreateTodoList() {
+  function confirmCreateTodoList(e: Event) {
+    e.preventDefault();
     if (createTodoListTitle.length === 0) {
       alert("cannot be empty");
       const el = document.getElementById("create-input");
+      console.log(el);
       if (el !== null) {
         focusOnElement(el)
       }
@@ -75,7 +78,8 @@
       })
   }
 
-  function confirmUpdateTodoList(todoListId: number) {
+  function confirmUpdateTodoList(e: Event, todoListId: number) {
+    e.preventDefault();
     if (updateTodoListTitle.length === 0) {
       alert("cannot be empty");
       const el = document.getElementById("edit-input");
@@ -142,9 +146,10 @@
     </div>
     <div class="flex items-end">
       <button 
-        class="bg-red-500 h-8 w-8 m-1 rounded-full flex justify-center items-center hover:cursor-pointer"
+        title="Create a new todolist"
+        class="bg-red-500 h-5 w-5 m-1 rounded-full flex justify-center items-center hover:cursor-pointer"
         on:click={() => inCreateTodoListMode = true}>
-        <Icon class="text-white h-7 w-7" icon="mingcute:add-line" />
+        <Icon class="text-white h-4 w-4" icon="mingcute:add-line" />
       </button>
     </div>
   </div>
@@ -163,7 +168,7 @@
             {#each todoListsStore as tl}
               <!-- If todolist selected for edit do: -->
               {#if tl.id === todoListInEditMode}
-                <div class="border border-b-black flex justify-between w-full" use:clickOutside on:click_outside={() => todoListInEditMode = null}>
+                <form class="border border-b-black flex justify-between w-full" use:clickOutside on:click_outside={() => todoListInEditMode = null}>
                   <div class="flex items-center">
                     <input 
                       id="edit-input"
@@ -173,27 +178,19 @@
                       on:input={handleChangeTodoListTitle}
                       use:focusOnElement />
                   </div>
-                  <div class="flex items-center ">
-                    <button on:click={() => confirmUpdateTodoList(tl.id)}>
-                      <Icon icon="ph:check-bold" class="w-[20px] h-[20px] hover:cursor-pointer" />
-                    </button>
-                    <button on:click={() => todoListInEditMode = null}>
-                      <Icon icon="ph:x-bold" class="w-[20px] h-[20px] hover:cursor-pointer" />
-                    </button>
-                  </div>
-                </div>
+                  <OptionsWidget options={[
+                    {tooltip: "Confirm edit todolist", icon: "ph:check-bold", callback: (e) => confirmUpdateTodoList(e, tl.id), submits: true},
+                    {tooltip: "Cancel edit", icon: "ph:x-bold", callback: () => todoListInEditMode = null}
+                  ]} />
+                </form>
                 <!-- If todolist selected for delete do: -->
                 {:else if todoListInDeleteMode === tl.id}
                 <div class="border border-b-black flex justify-between w-full" use:clickOutside on:click_outside={() => todoListInDeleteMode = null}>
                   <p class="ml-1 my-[1px] text-red-500 font-bold">Delete this todolist?</p>
-                  <div class="h-full w-[40px] flex items-center">
-                    <button class="hover:cursor-pointer" on:click={() => confirmDeleteTodoList(tl.id)}>
-                      <Icon icon="mingcute:delete-2-line" class="w-[20px] h-[20px]"/>
-                    </button>
-                    <button class="hover:cursor-pointer" on:click={() => todoListInDeleteMode = null}>
-                      <Icon icon="ph:x-bold" class="w-[20px] h-[20px]" />
-                    </button>
-                  </div>
+                  <OptionsWidget options={[
+                    {tooltip: "Confirm delete todolist", icon: "mingcute:delete-2-line", callback: () => confirmDeleteTodoList(tl.id)},
+                    {tooltip: "Cancel deleting", icon: "ph:x-bold", callback: () => todoListInDeleteMode = null}
+                  ]} />
                 </div>
                 <!-- else display in its default state -->
               {:else}
@@ -201,14 +198,10 @@
                   <button class="ml-1 my-[1px] w-full hover:cursor-pointer text-left" on:click={() => handleTodoListSelected(tl.id)}>
                     {stringShorten(tl.title, 25)}
                   </button>
-                  <div class="h-full w-[40px] flex items-center">
-                    <button class="hover:cursor-pointer" on:click={() => todoListInEditMode = tl.id}>
-                      <Icon icon="mingcute:edit-2-line" class="w-[20px] h-[20px]" />
-                    </button>
-                    <button class="hover:cursor-pointer" on:click={() => todoListInDeleteMode = tl.id}>
-                      <Icon icon="mingcute:delete-2-line" class="w-[20px] h-[20px]"/>
-                    </button>
-                  </div>
+                  <OptionsWidget options={[
+                    {tooltip: "Edit todolist title", icon: "mingcute:edit-2-line", callback: () => todoListInEditMode = tl.id},
+                    {tooltip: "Delete this todolist", icon: "mingcute:delete-2-line", callback: () => todoListInDeleteMode = tl.id}
+                  ]} />
                 </div>
               {/if}
             {/each}
@@ -224,7 +217,7 @@
       <!-- Create TodoList Logic -->
       {#if inCreateTodoListMode}
         <div class="border border-b-black w-full" use:clickOutside on:click_outside={() => inCreateTodoListMode = false}>
-          <div class="flex justify-between">
+          <form class="flex justify-between">
             <div class="flex items-center">
               <input 
                 id="create-input"
@@ -234,14 +227,12 @@
                 use:focusOnElement />
             </div>
             <div class=" flex items-center mr-[1px]">
-              <button class="leading-0" on:click={confirmCreateTodoList}>
-                <Icon icon="ph:check-bold" class="w-[20px] h-[20px] hover:cursor-pointer" />
-              </button>
-              <button class="leading-0" on:click={() => inCreateTodoListMode = false}>
-                <Icon icon="ph:x-bold" class="w-[20px] h-[20px] hover:cursor-pointer" />
-              </button>
+              <OptionsWidget options={[
+                {tooltip: "Confirm create todolist", icon: "ph:check-bold", callback: confirmCreateTodoList, submits: true},
+                {tooltip: "Exit create mode todolist", icon: "ph:x-bold", callback: () => inCreateTodoListMode = false}
+              ]} />
             </div>
-          </div>
+          </form>
         </div>
       {/if}
     </div>
