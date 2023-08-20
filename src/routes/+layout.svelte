@@ -1,8 +1,9 @@
 <script lang="ts">
   import Cookies from "js-cookie"
-  import { signedIn, currentTodoList } from "$lib/store"
-  import { defaultTodoList } from "$lib/utils"
+  import { signedIn, currentTodoList, toasts } from "$lib/store"
+  import { addToast, defaultTodoList } from "$lib/utils"
   import "../app.css"
+	import Toasts from "$lib/components/widgets/toasts.svelte";
 
   let isSignedIn: boolean;
 
@@ -19,6 +20,7 @@
 
 <!-- Title container -->
 <div class="flex justify-center">
+  <Toasts />
   <h1 class="text-6xl font-bold py-4 text-white">Todo App</h1>
 </div>
 <div class="flex justify-center mb-3">

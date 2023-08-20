@@ -34,3 +34,13 @@ export interface ButtonOptions {
   testId?: string,
   submits?: boolean
 }
+
+export type ToastTypes = "INFO" | "WARN" | "ERROR"
+
+export interface Toast {
+  id: number,
+  type: ToastTypes,
+  dismissable: boolean,
+  timeout: number,
+  message: string
+}
