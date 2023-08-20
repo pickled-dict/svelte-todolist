@@ -212,7 +212,8 @@
     <div class="flex items-end">
       <button 
         title="Create a new todolist"
-        class="bg-red-500 h-5 w-5 m-1 rounded-full flex justify-center items-center hover:cursor-pointer"
+        class={`${!isSignedInStore ? "bg-gray-400" : "bg-red-500  hover:cursor-pointer"} h-5 w-5 m-1 rounded-full flex justify-center items-center`}
+        disabled={!isSignedInStore}
         on:click={() => inCreateTodoListMode = true}>
         <Icon class="text-white h-4 w-4" icon="mingcute:add-line" />
       </button>
