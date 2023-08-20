@@ -22,7 +22,7 @@ export async function load({cookies, fetch}: PageServerLoadEvent) {
       if (!res.ok) {
         throw new Error((await res.json()).message)
       }
-      return res;
+      return await res.json();
     }).then(() => {
       return {
         verified: true

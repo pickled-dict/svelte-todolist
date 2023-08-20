@@ -5,7 +5,7 @@
   import { clickOutside } from "$lib/eventFunctions";
 	import { sendPostRequest, sendPutRequest, sendDeleteRequest} from "$lib/fetchRequests";
   import { currentTodoList, signedIn, todoLists } from "$lib/store"
-  import { focusOnElement, stringShorten } from "$lib/utils";
+  import { focusOnElement, fullSignOut, stringShorten } from "$lib/utils";
   import {API_URL, TODO_ROUTE, TODOLIST_ROUTE} from "$lib/constants"
 	import OptionsWidget from "../widgets/optionsWidget.svelte";
 
@@ -92,7 +92,10 @@
           content: updateTodoContent,
           complete: curTodo.complete
         }, Cookies.get("token"))
-          .then(res => {
+          .then(async res => {
+            if (!res.ok) {
+              throw new Error((await res.json()).message)
+            }
             return res.json() as unknown as Todo
           })
           .then((data) => {
@@ -105,7 +108,10 @@
             currentTodoListStore.todos = alteredTodos;
             currentTodoList.set(currentTodoListStore);
           })
-          .catch(err => console.error(err))
+          .catch(err => {
+            fullSignOut();
+            console.error(err)
+          })
       } else {
         console.error("something went wrong while updating todo")
       }
@@ -122,12 +128,18 @@
     if (!isDefaultTodoList(currentTodoListStore)) {
       sendDeleteRequest(`${TODO_ROUTE}/${id}`, Cookies.get("token"))
         .then(async (res) => {
+          if (!res.ok) {
+            throw new Error((await res.json()).message)
+          }
           await res.json().then(() => {
             currentTodoListStore.todos = alteredTodos;
             currentTodoList.set(currentTodoListStore);
           })
         })
-        .catch(err => console.error(err))
+        .catch(err => {
+          fullSignOut();
+          console.error(err)
+        })
     } else {
       currentTodoListStore.todos = alteredTodos;
       currentTodoList.set(currentTodoListStore);
@@ -153,14 +165,20 @@
           content: newTodoContent,
           complete: false
         }, Cookies.get("token"))
-        .then(res => {
+        .then(async res => {
+          if (!res.ok) {
+            throw new Error((await res.json()).message)
+          }
           return res.json() as unknown as Todo;
         })
         .then(data => {
           currentTodoListStore.todos.push(data);
           currentTodoList.set(currentTodoListStore);
         })
-        .catch(err => {console.error(err)})
+        .catch(err => {
+          fullSignOut();
+          console.error(err);
+        })
     } else {
       let highestId = 0;
       if (currentTodoListStore.todos.length > 0) {
@@ -208,12 +226,18 @@
       sendPutRequest(`${TODOLIST_ROUTE}/${id}`, {
         title: updateTodoListTitle
       }, Cookies.get("token")).then(async (res) => {
+          if (!res.ok) {
+            throw new Error((await res.json()).message)
+          }
           await res.json().then(() => {
             currentTodoListStore.title = updateTodoListTitle;
             currentTodoList.set(currentTodoListStore);
             todoLists.set(alteredTodoLists);
           })
-        }).catch((err) => console.error(err))
+        }).catch((err) => {
+          fullSignOut();
+          console.error(err)
+        })
     } else {
       currentTodoListStore.title = updateTodoListTitle;
       currentTodoList.set(currentTodoListStore);
@@ -238,10 +262,16 @@
           content: currentTodo.content,
           complete: currentTodo.complete
         }, Cookies.get("token"))
-          .then(() => {
+          .then(async res => {
+            if (!res.ok) {
+              throw new Error((await res.json()).message)
+            }
             currentTodoListStore.todos = alteredTodos;
             currentTodoList.set(currentTodoListStore);
-          }).catch(err => console.error(err))
+          }).catch(err => {
+            fullSignOut();
+            console.error(err)
+          })
       } else {
         console.error("Something went wrong while toggling complete")
       }
@@ -261,11 +291,17 @@
 
     sendPostRequest(`${TODOLIST_ROUTE}/save`, newTodoList, Cookies.get("token"))
       .then(async res => {
+        if (!res.ok) {
+          throw new Error((await res.json()).message)
+        }
         const result = await res.json();
         currentTodoList.set(result);
         todoLists.set([...todoListsStore, result]);
       })
-      .catch(err => console.error(err))
+      .catch(err => {
+        fullSignOut();
+        console.error(err);
+      })
   }
 
   // === buttons and mode options

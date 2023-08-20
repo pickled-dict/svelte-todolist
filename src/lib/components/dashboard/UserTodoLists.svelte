@@ -6,7 +6,7 @@
   import { sendDeleteRequest, sendPostRequest, sendPutRequest } from "$lib/fetchRequests";
   import { signedIn, todoLists, currentTodoList } from "$lib/store";
   import { clickOutside } from "$lib/eventFunctions";
-  import { focusOnElement, stringShorten, defaultTodoList } from "$lib/utils";
+  import { focusOnElement, stringShorten, defaultTodoList, fullSignOut } from "$lib/utils";
   import { TODOLIST_ROUTE } from "$lib/constants";
 	import OptionsWidget from "../widgets/optionsWidget.svelte";
 
@@ -63,8 +63,11 @@
       return;
     }
     sendPostRequest(TODOLIST_ROUTE, {title: createTodoListTitle}, Cookies.get("token"))
-      .then((res) => {
+      .then(async (res) => {
         inCreateTodoListMode = false;
+        if (!res.ok) {
+          throw new Error((await res.json()).message)
+        }
         return res.json() as unknown as TodoList
       })
       .then((todoList) => {
@@ -73,6 +76,7 @@
         currentTodoList.set(todoList)
         createTodoListTitle = ""
       }).catch((err) => {
+        fullSignOut();
         console.error(err);
       })
   }
@@ -88,7 +92,10 @@
       return;
     }
     sendPutRequest(TODOLIST_ROUTE + `/${todoListId}`, {title: updateTodoListTitle}, Cookies.get("token"))
-      .then((res) => {
+      .then(async (res) => {
+        if (!res.ok) {
+          throw new Error((await res.json()).message)
+        }
         todoListInEditMode = null;
         return res.json() as unknown as TodoList
       })
@@ -107,12 +114,19 @@
 
         todoLists.set(updatedTodoList);
       }).catch((err) => {
+        fullSignOut();
         console.error(err);
       })
   }
 
   function confirmDeleteTodoList(todoListId: number) {
     sendDeleteRequest(TODOLIST_ROUTE + `/${todoListId}`, Cookies.get("token"))
+      .then(async (res) => {
+        if (!res.ok) {
+          throw new Error((await res.json()).message)
+        }
+        return res.json();
+      })
       .then(() => {
         todoListInDeleteMode = null;
         const updatedTodoLists = todoListsStore.filter((tl) => tl.id !== todoListId)
@@ -127,7 +141,9 @@
             currentTodoList.set(structuredClone(defaultTodoList))
           }
         }
-      }).catch((err) => {
+      })
+      .catch((err) => {
+        fullSignOut();
         console.error(err);
       })
   }
