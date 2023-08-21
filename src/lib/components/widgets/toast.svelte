@@ -2,7 +2,7 @@
 	import type { ToastTypes } from "$lib/interfaces";
   import Icon from "@iconify/svelte";
   import { createEventDispatcher } from "svelte";
-  import { fade } from "svelte/transition";
+  import { slide } from "svelte/transition";
 
   const dispatch = createEventDispatcher();
 
@@ -24,7 +24,7 @@
   }
 </script>
 
-<div class={`${colorParserByToastType(type)} flex p-2 rounded-lg`} role="alert" transition:fade>
+<div class={`${colorParserByToastType(type)} flex p-2 rounded-lg my-2 justify-between`} role="alert" transition:slide>
   <div>
     <slot />
   </div>

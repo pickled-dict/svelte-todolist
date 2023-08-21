@@ -19,11 +19,20 @@ export function stringShorten(s: string, to: number) {
   return s
 }
 
-export function fullSignOut() {
+export function unauthorizedSignout() {
   signedIn.set(false);
   currentTodoList.set(structuredClone(defaultTodoList))
   todoLists.set([]);
   Cookies.remove("token");
+  addToast({message: "Session has expired, user logged out", dismissable: true, timeout: 3000, type: "WARN"})
+}
+
+export function naturalSignout() {
+  signedIn.set(false);
+  currentTodoList.set(structuredClone(defaultTodoList))
+  todoLists.set([]);
+  Cookies.remove("token");
+  addToast({message: "User has been logged out", dismissable: true, timeout: 3000, type: "INFO"})
 }
 
 export function addToast(toast: Partial<Toast>) {
@@ -36,12 +45,7 @@ export function addToast(toast: Partial<Toast>) {
     message: "default message"
   }
 
-  console.log(toast);
   toasts.update((toasts) => [{...defaults, ...toast}, ...toasts])
-
-  toasts.subscribe(t => {
-    console.log(t);
-  })
 
   if (toast.timeout) {
     setTimeout(() => {

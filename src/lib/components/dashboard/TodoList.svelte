@@ -5,7 +5,7 @@
   import { clickOutside } from "$lib/eventFunctions";
 	import { sendPostRequest, sendPutRequest, sendDeleteRequest} from "$lib/fetchRequests";
   import { currentTodoList, signedIn, todoLists } from "$lib/store"
-  import { focusOnElement, fullSignOut, stringShorten } from "$lib/utils";
+  import { focusOnElement, unauthorizedSignout, stringShorten, addToast } from "$lib/utils";
   import {API_URL, TODO_ROUTE, TODOLIST_ROUTE} from "$lib/constants"
 	import OptionsWidget from "../widgets/optionsWidget.svelte";
 
@@ -69,11 +69,7 @@
   function confirmUpdateTodo(e:Event, todoId: number) {
     e.preventDefault();
     if (updateTodoContent.length === 0) {
-      alert("cannot be empty");
-      const el = document.getElementById("edit-input");
-      if (el !== null) {
-        focusOnElement(el)
-      }
+      addToast({message: "Cannot update todo with empty content", dismissable: true, timeout: 2000, type: "WARN"})
       return;
     }
 
@@ -107,9 +103,10 @@
             })
             currentTodoListStore.todos = alteredTodos;
             currentTodoList.set(currentTodoListStore);
+            addToast({message: "Todo was successfully updated", dismissable: true, timeout: 2000, type: "INFO"})
           })
           .catch(err => {
-            fullSignOut();
+            unauthorizedSignout();
             console.error(err)
           })
       } else {
@@ -118,6 +115,7 @@
     } else {
       currentTodoListStore.todos = alteredTodos;
       currentTodoList.set(currentTodoListStore);
+      addToast({message: "Todo was successfully updated", dismissable: true, timeout: 2000, type: "INFO"})
     }
     todoInEditMode = null;
   }
@@ -134,15 +132,17 @@
           await res.json().then(() => {
             currentTodoListStore.todos = alteredTodos;
             currentTodoList.set(currentTodoListStore);
+            addToast({message: "Todo was successfully deleted", dismissable: true, timeout: 2000, type: "INFO"})
           })
         })
         .catch(err => {
-          fullSignOut();
+          unauthorizedSignout();
           console.error(err)
         })
     } else {
       currentTodoListStore.todos = alteredTodos;
       currentTodoList.set(currentTodoListStore);
+      addToast({message: "Todo was successfully deleted", dismissable: true, timeout: 2000, type: "INFO"})
     }
 
     todoInDeleteMode = null;
@@ -151,11 +151,7 @@
 	function confirmCreateTodo(e: Event) {
     e.preventDefault();
     if (newTodoContent.length === 0) {
-      alert("cannot be empty");
-      const el = document.getElementById("create-input");
-      if (el !== null) {
-        focusOnElement(el)
-      }
+      addToast({message: "Cannot create todo with empty content", dismissable: true, timeout: 2000, type: "WARN"})
       return;
     }
 
@@ -174,9 +170,10 @@
         .then(data => {
           currentTodoListStore.todos.push(data);
           currentTodoList.set(currentTodoListStore);
+          addToast({message: "Todo has been successfully created", dismissable: true, timeout: 2000, type: "INFO"})
         })
         .catch(err => {
-          fullSignOut();
+          unauthorizedSignout();
           console.error(err);
         })
     } else {
@@ -198,6 +195,7 @@
 
       currentTodoListStore.todos.push(newTodo);
       currentTodoList.set(currentTodoListStore);
+      addToast({message: "Todo has been successfully created", dismissable: true, timeout: 2000, type: "INFO"})
     }
 
     inCreateTodoMode = false;
@@ -208,11 +206,7 @@
     console.log(`from todolist: ${id}`);
     e.preventDefault();
     if (updateTodoListTitle.length === 0) {
-      alert("cannot be empty");
-      const el = document.getElementById("edit-title-input");
-      if (el !== null) {
-        focusOnElement(el)
-      }
+      addToast({message: "Cannot update todolist with empty title", dismissable: true, timeout: 2000, type: "WARN"})
       return;
     }
 
@@ -233,14 +227,16 @@
             currentTodoListStore.title = updateTodoListTitle;
             currentTodoList.set(currentTodoListStore);
             todoLists.set(alteredTodoLists);
+            addToast({message: "Todolist title has been successfully updated", dismissable: true, timeout: 2000, type: "INFO"})
           })
         }).catch((err) => {
-          fullSignOut();
+          unauthorizedSignout();
           console.error(err)
         })
     } else {
       currentTodoListStore.title = updateTodoListTitle;
       currentTodoList.set(currentTodoListStore);
+      addToast({message: "Todolist title has been successfully updated", dismissable: true, timeout: 2000, type: "INFO"})
     }
 
     inEditTodoListTitleMode = false;
@@ -269,7 +265,7 @@
             currentTodoListStore.todos = alteredTodos;
             currentTodoList.set(currentTodoListStore);
           }).catch(err => {
-            fullSignOut();
+            unauthorizedSignout();
             console.error(err)
           })
       } else {
@@ -299,7 +295,7 @@
         todoLists.set([...todoListsStore, result]);
       })
       .catch(err => {
-        fullSignOut();
+        unauthorizedSignout();
         console.error(err);
       })
   }

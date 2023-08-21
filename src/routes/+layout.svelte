@@ -1,16 +1,13 @@
 <script lang="ts">
-  import Cookies from "js-cookie"
-  import { signedIn, currentTodoList, toasts } from "$lib/store"
-  import { addToast, defaultTodoList } from "$lib/utils"
+  import { signedIn } from "$lib/store"
+  import { naturalSignout } from "$lib/utils"
   import "../app.css"
 	import Toasts from "$lib/components/widgets/toasts.svelte";
 
   let isSignedIn: boolean;
 
   function handleLogoutClicked() {
-    Cookies.remove('token');
-    signedIn.set(false);
-    currentTodoList.set(structuredClone(defaultTodoList));
+    naturalSignout();
   }
 
   signedIn.subscribe((val) => {

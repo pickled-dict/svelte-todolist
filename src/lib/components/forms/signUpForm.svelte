@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { z } from "zod";
 	import FormInput from "../widgets/formInput.svelte";
-	import type { FormError, MessageResponse } from "$lib/interfaces";
+	import type { FormError } from "$lib/interfaces";
 	import SubmitButton from "../widgets/submitButton.svelte";
 	import { sendPostRequest } from "$lib/fetchRequests";
 	import { AUTH_ROUTE } from "$lib/constants";
 	import { goto } from "$app/navigation";
+	import { addToast } from "$lib/utils";
 
   interface SignupErrors {
     email: Array<string>,
@@ -78,12 +79,14 @@
       }).then(() => {
         errors.responseError = "";
         goto("/login")
+        addToast({message: "Signup was successful!", dismissable: true, timeout: 3000, type: "INFO"})
       })
       .catch((err) => {
         if (!errors.responseError.includes(err.message)) {
           errors.responseError = err.message
         }
         console.error(err);
+        addToast({message: "Something went wrong during signup...", dismissable: true, timeout: 3000, type: "ERROR"})
       })}
 
 </script>

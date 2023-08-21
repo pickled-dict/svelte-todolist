@@ -6,7 +6,7 @@
   import { sendDeleteRequest, sendPostRequest, sendPutRequest } from "$lib/fetchRequests";
   import { signedIn, todoLists, currentTodoList } from "$lib/store";
   import { clickOutside } from "$lib/eventFunctions";
-  import { focusOnElement, stringShorten, defaultTodoList, fullSignOut } from "$lib/utils";
+  import { focusOnElement, stringShorten, defaultTodoList, unauthorizedSignout, addToast } from "$lib/utils";
   import { TODOLIST_ROUTE } from "$lib/constants";
 	import OptionsWidget from "../widgets/optionsWidget.svelte";
 
@@ -54,12 +54,7 @@
   function confirmCreateTodoList(e: Event) {
     e.preventDefault();
     if (createTodoListTitle.length === 0) {
-      alert("cannot be empty");
-      const el = document.getElementById("create-input");
-      console.log(el);
-      if (el !== null) {
-        focusOnElement(el)
-      }
+      addToast({message: "Cannot create todolist with an empty title", dismissable: true, timeout: 2000, type: "WARN"})
       return;
     }
     sendPostRequest(TODOLIST_ROUTE, {title: createTodoListTitle}, Cookies.get("token"))
@@ -75,8 +70,9 @@
         todoList.todos = [];
         currentTodoList.set(todoList)
         createTodoListTitle = ""
+        addToast({message: "Todolist has been successfully created", dismissable: true, timeout: 2000, type: "INFO"})
       }).catch((err) => {
-        fullSignOut();
+        unauthorizedSignout();
         console.error(err);
       })
   }
@@ -84,11 +80,7 @@
   function confirmUpdateTodoList(e: Event, todoListId: number) {
     e.preventDefault();
     if (updateTodoListTitle.length === 0) {
-      alert("cannot be empty");
-      const el = document.getElementById("edit-input");
-      if (el !== null) {
-        focusOnElement(el)
-      }
+      addToast({message: "Cannot update todolist with an empty title", dismissable: true, timeout: 2000, type: "WARN"})
       return;
     }
     sendPutRequest(TODOLIST_ROUTE + `/${todoListId}`, {title: updateTodoListTitle}, Cookies.get("token"))
@@ -113,8 +105,9 @@
         }
 
         todoLists.set(updatedTodoList);
+        addToast({message: "Todolist successfully updated", dismissable: true, timeout: 2000, type: "INFO"})
       }).catch((err) => {
-        fullSignOut();
+        unauthorizedSignout();
         console.error(err);
       })
   }
@@ -141,9 +134,10 @@
             currentTodoList.set(structuredClone(defaultTodoList))
           }
         }
+        addToast({message: "Todolist successfully deleted", dismissable: true, timeout: 2000, type: "INFO"})
       })
       .catch((err) => {
-        fullSignOut();
+        unauthorizedSignout();
         console.error(err);
       })
   }

@@ -7,6 +7,7 @@
   import {sendPostRequest} from "$lib/fetchRequests"
   import type { FormError } from "$lib/interfaces";
   import {AUTH_ROUTE} from "$lib/constants";
+	import { addToast } from "$lib/utils";
 
 
   interface SignInErrors {
@@ -55,6 +56,7 @@
       errors.responseError = "";
       Cookies.set('token', data.token);
       goto("/")
+      addToast({message: "Successfully logged in!", dismissable: true, timeout: 3000, type: "INFO"})
     }).catch((err) => {
       if (!errors.responseError.includes(err.message)) {
         errors.responseError = err.message
