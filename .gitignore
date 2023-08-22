@@ -4,6 +4,9 @@ node_modules
 /.svelte-kit
 /package
 .env
+<<<<<<< HEAD
 !.env.example
+=======
+>>>>>>> 8256e58 (re-added env files that don't have a suffix, i.e. .env.dev,)
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
