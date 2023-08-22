@@ -1,0 +1,15 @@
+version: '3'
+services:
+  app:
+    restart: always
+    build:
+      context: ./
+      dockerfile: ./Dockerfile.dev
+    env_file:
+      - .env.dev
+    ports:
+      - 5173:5173
+    network_mode: host
+    volumes:
+      - ./:/usr/src/app
+      - /usr/src/app/node_modules
