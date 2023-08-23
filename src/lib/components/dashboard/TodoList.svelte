@@ -73,6 +73,11 @@
       return;
     }
 
+    if (updateTodoContent.length > 5000) {
+      addToast({message: "Todo content length cannot exceed 5000 characters", dismissable: true, timeout: 3000, type: "ERROR"})
+      return;
+    }
+
     const alteredTodos = currentTodoListStore.todos.map((td) => {
       if (td.id === todoId) {
         td.content = updateTodoContent;
@@ -152,6 +157,11 @@
     e.preventDefault();
     if (newTodoContent.length === 0) {
       addToast({message: "Cannot create todo with empty content", dismissable: true, timeout: 2000, type: "WARN"})
+      return;
+    }
+
+    if (newTodoContent.length > 5000) {
+      addToast({message: "Todo content length cannot exceed 5000 characters", dismissable: true, timeout: 3000, type: "ERROR"})
       return;
     }
 
