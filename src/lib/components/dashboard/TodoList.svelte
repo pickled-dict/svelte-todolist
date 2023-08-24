@@ -434,25 +434,27 @@
   {/if}
   <!-- Main Todos block -->
   <div class="w-full h-full flex justify-center border border-l-black bg-gray-200 overflow-y-scroll">
-    <div class="h-full w-[400px] bg-gray-100">
+    <div class="h-full w-[400px]">
       {#if currentTodoListStore.todos.length > 0 || inCreateTodoMode}
         <!-- Show todos -->
         {#each currentTodoListStore.todos as todo}
-          <div class="w-full border border-b-gray-300">
+          <div class="w-full my-2 rounded-lg">
             <!-- if todo is in edit mode, do: -->
             {#if todoInEditMode === todo.id}
-              <form class="mx-2 my-[1px] flex justify-between" use:clickOutside on:click_outside={() => todoInEditMode = null}>
-                <div class="border border-b-black flex justify-between w-full">
-                  <input 
+              <form class="mx-2 my-[1px] flex flex-col" use:clickOutside on:click_outside={() => todoInEditMode = null}>
+                <div class="flex justify-between w-full bg-gray-100 p-2 rounded-l-lg rounded-tr-lg drop-shadow-lg">
+                  <textarea 
+                    style="resize: none;"
+                    rows=5
                     data-testid="todo-edit-input"
                     id="edit-input"
-                    class="bg-gray-200 m-[1px] pl-1 w-full"
+                    class="bg-gray-100 outline-gray-300 m-[1px] pl-1 w-full"
                     value={todo.content}
                     on:focusin={() => updateTodoContent = todo.content}
                     on:input={handleChangeTodoTitle}
                     use:focusOnElement />
                 </div>
-                <div class="flex items-center">
+                <div class="flex self-end ml-2 bg-gray-100 rounded-b-lg pb-1 px-2 drop-shadow-lg">
                   <OptionsWidget options={todoInEditModeOptions(todo.id)} />
                 </div>
               </form>
@@ -466,13 +468,21 @@
               </div>
               <!-- Else display todo with options -->
             {:else}
-              <div class="mx-2 my-[1px] flex justify-between">
-                {#if todo.complete}
-                  <button data-testid="todo-content-complete" class="w-full text-left line-through" on:click={() => handleToggleComplete(todo.id)}>{todo.content}</button>
-                {:else}
-                  <button data-testid="todo-content-not-complete" class="w-full text-left" on:click={() => handleToggleComplete(todo.id)}>{todo.content}</button>
+              <div class="mx-2 my-[1px] flex flex-col">
+                {#if todo.content.length > 150}
+                    {#if todo.complete}
+                      <button data-testid="todo-content-complete" class="w-full text-left line-through bg-gray-100 p-2 rounded-l-lg rounded-tr-lg drop-shadow-lg" on:click={() => handleToggleComplete(todo.id)}>{stringShorten(todo.content, 150)}</button>
+                    {:else}
+                      <button data-testid="todo-content-not-complete" class="w-full text-left bg-gray-100 p-2 rounded-l-lg rounded-tr-lg drop-shadow-lg" on:click={() => handleToggleComplete(todo.id)}>{stringShorten(todo.content, 150)}</button>
+                    {/if}
+                  {:else}
+                    {#if todo.complete}
+                      <button data-testid="todo-content-complete" class="w-full text-left line-through bg-gray-100 p-2 rounded-l-lg rounded-tr-lg drop-shadow-lg" on:click={() => handleToggleComplete(todo.id)}>{todo.content}</button>
+                    {:else}
+                      <button data-testid="todo-content-not-complete" class="w-full text-left bg-gray-100 p-2 rounded-l-lg rounded-tr-lg drop-shadow-lg" on:click={() => handleToggleComplete(todo.id)}>{todo.content}</button>
+                    {/if}
                 {/if}
-                <div class="flex items-center">
+                <div class="flex self-end ml-2 bg-gray-100 rounded-b-lg pb-1 px-2 drop-shadow-lg">
                   <OptionsWidget options={defaultTodoOptions(todo.id)} />
                 </div>
               </div>
