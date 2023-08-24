@@ -8,6 +8,8 @@
   import { focusOnElement, unauthorizedSignout, stringShorten, addToast } from "$lib/utils";
   import {API_URL, TODO_ROUTE, TODOLIST_ROUTE} from "$lib/constants"
 	import OptionsWidget from "../widgets/optionsWidget.svelte";
+	import { fade, fly, slide } from "svelte/transition";
+	import { quintIn, quintOut } from "svelte/easing";
 
   interface TodoDto {
     content: string,
@@ -502,8 +504,10 @@
               <div class="mx-2 my-[1px] flex flex-col">
                 {#if todo.content.length > 150 && !expandedList.includes(todo.id)}
                     <button data-testid="todo-content-not-complete" class="w-full text-left bg-gray-100 p-2 rounded-l-lg rounded-tr-lg drop-shadow-lg" on:click={() => handleTodoExpanded(todo.id)}>{stringShorten(todo.content, 150)}</button>
-                  {:else}
+                  {:else if expandedList.includes(todo.id)}
                     <button data-testid="todo-content-not-complete" class="w-full text-left bg-gray-100 p-2 rounded-l-lg rounded-tr-lg drop-shadow-lg" on:click={() => handleTodoCollapsed(todo.id)}>{todo.content}</button>
+                  {:else}
+                    <p data-testid="todo-content-not-complete" class="w-full text-left bg-gray-100 p-2 rounded-l-lg rounded-tr-lg drop-shadow-lg">{todo.content}</p>
                 {/if}
                 <div class="flex self-end ml-2 bg-gray-100 rounded-b-lg pb-1 px-2 drop-shadow-lg">
                   <OptionsWidget options={defaultTodoOptions(todo.id)} />
