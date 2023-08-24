@@ -468,19 +468,18 @@
               </div>
               <!-- Else display todo with options -->
             {:else}
+              {#if todo.complete}
+                <div class="relative">
+                  <div class="absolute left-[-14px] top-0">
+                    <Icon class="text-green-600 w-[20px] h-[20px]" icon="carbon:checkmark-filled" />
+                  </div>
+                </div>
+              {/if}
               <div class="mx-2 my-[1px] flex flex-col">
                 {#if todo.content.length > 150}
-                    {#if todo.complete}
-                      <button data-testid="todo-content-complete" class="w-full text-left line-through bg-gray-100 p-2 rounded-l-lg rounded-tr-lg drop-shadow-lg" on:click={() => handleToggleComplete(todo.id)}>{stringShorten(todo.content, 150)}</button>
-                    {:else}
-                      <button data-testid="todo-content-not-complete" class="w-full text-left bg-gray-100 p-2 rounded-l-lg rounded-tr-lg drop-shadow-lg" on:click={() => handleToggleComplete(todo.id)}>{stringShorten(todo.content, 150)}</button>
-                    {/if}
+                    <button data-testid="todo-content-not-complete" class="w-full text-left bg-gray-100 p-2 rounded-l-lg rounded-tr-lg drop-shadow-lg" on:click={() => handleToggleComplete(todo.id)}>{stringShorten(todo.content, 150)}</button>
                   {:else}
-                    {#if todo.complete}
-                      <button data-testid="todo-content-complete" class="w-full text-left line-through bg-gray-100 p-2 rounded-l-lg rounded-tr-lg drop-shadow-lg" on:click={() => handleToggleComplete(todo.id)}>{todo.content}</button>
-                    {:else}
-                      <button data-testid="todo-content-not-complete" class="w-full text-left bg-gray-100 p-2 rounded-l-lg rounded-tr-lg drop-shadow-lg" on:click={() => handleToggleComplete(todo.id)}>{todo.content}</button>
-                    {/if}
+                    <button data-testid="todo-content-not-complete" class="w-full text-left bg-gray-100 p-2 rounded-l-lg rounded-tr-lg drop-shadow-lg" on:click={() => handleToggleComplete(todo.id)}>{todo.content}</button>
                 {/if}
                 <div class="flex self-end ml-2 bg-gray-100 rounded-b-lg pb-1 px-2 drop-shadow-lg">
                   <OptionsWidget options={defaultTodoOptions(todo.id)} />
