@@ -27,6 +27,7 @@
   let updateTodoContent = "";
   let newTodoContent = "";
   let updateTodoListTitle = "";
+  let expandedList: number[] = []; 
 
   // subscriber variables
   let currentTodoListStore: TodoList;
@@ -310,6 +311,14 @@
       })
   }
 
+	function handleTodoExpanded(id: number) {
+    expandedList = [...expandedList, id]
+	}
+
+	function handleTodoCollapsed(id: number) {
+    expandedList = expandedList.filter(todoId => id !== todoId)
+	}
+
   // === buttons and mode options
   const editTodoListTitleOptions: ButtonOptions[] = [
     {
@@ -475,11 +484,26 @@
                   </div>
                 </div>
               {/if}
+              {#if todo.content.length > 150}
+                {#if expandedList.includes(todo.id)}
+                  <div class="relative">
+                    <button class="absolute right-[-10px] top-0 w-6 bg-gray-100 rounded-r-lg flex justify-end drop-shadow-lg" on:click={() => handleTodoCollapsed(todo.id)}>
+                      <Icon class="text-gray-800 w-[20px] h-[20px] mr-[1px]" icon="mdi:chevron-down" />
+                    </button>
+                  </div>
+                {:else}
+                  <div class="relative">
+                    <button class="absolute right-[-10px] top-0 w-6 bg-gray-100 rounded-r-lg flex justify-end drop-shadow-lg" on:click={() => handleTodoExpanded(todo.id)}>
+                      <Icon class="text-gray-800 w-[20px] h-[20px] mr-[1px]" icon="mdi:chevron-up" />
+                    </button>
+                  </div>
+                {/if}
+              {/if}
               <div class="mx-2 my-[1px] flex flex-col">
-                {#if todo.content.length > 150}
-                    <button data-testid="todo-content-not-complete" class="w-full text-left bg-gray-100 p-2 rounded-l-lg rounded-tr-lg drop-shadow-lg" on:click={() => handleToggleComplete(todo.id)}>{stringShorten(todo.content, 150)}</button>
+                {#if todo.content.length > 150 && !expandedList.includes(todo.id)}
+                    <button data-testid="todo-content-not-complete" class="w-full text-left bg-gray-100 p-2 rounded-l-lg rounded-tr-lg drop-shadow-lg" on:click={() => handleTodoExpanded(todo.id)}>{stringShorten(todo.content, 150)}</button>
                   {:else}
-                    <button data-testid="todo-content-not-complete" class="w-full text-left bg-gray-100 p-2 rounded-l-lg rounded-tr-lg drop-shadow-lg" on:click={() => handleToggleComplete(todo.id)}>{todo.content}</button>
+                    <button data-testid="todo-content-not-complete" class="w-full text-left bg-gray-100 p-2 rounded-l-lg rounded-tr-lg drop-shadow-lg" on:click={() => handleTodoCollapsed(todo.id)}>{todo.content}</button>
                 {/if}
                 <div class="flex self-end ml-2 bg-gray-100 rounded-b-lg pb-1 px-2 drop-shadow-lg">
                   <OptionsWidget options={defaultTodoOptions(todo.id)} />
