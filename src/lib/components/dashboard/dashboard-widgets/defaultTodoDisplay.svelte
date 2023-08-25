@@ -38,7 +38,7 @@
     </div>
   {/if}
 {/if}
-<div class="mx-2 my-[1px] flex flex-col">
+<div class="mx-2 flex flex-col">
   {#if todo.content.length > 150 && !expandedList.includes(todo.id)}
     <button data-testid="todo-content-not-complete" class="w-full text-left bg-gray-100 p-2 rounded-l-lg rounded-tr-lg drop-shadow-lg" on:click={() => handleTodoExpanded(todo.id)}>{stringShorten(todo.content, 150)}</button>
     {:else if expandedList.includes(todo.id)}
@@ -46,7 +46,7 @@
   {:else}
     <p data-testid="todo-content-not-complete" class="w-full text-left bg-gray-100 p-2 rounded-l-lg rounded-tr-lg drop-shadow-lg">{todo.content}</p>
   {/if}
-  <div class="flex self-end ml-2 bg-gray-100 rounded-b-lg pb-1 px-2 drop-shadow-lg">
+  <div class="flex self-end ml-2 mb-2 bg-gray-100 rounded-b-lg pb-1 px-2 drop-shadow-lg">
     <!-- slot for options section -->
     <slot />
   </div>

@@ -440,10 +440,10 @@
       {#if currentTodoListStore.todos.length > 0 || inCreateTodoMode}
         <!-- Show todos -->
         {#each currentTodoListStore.todos as todo}
-          <div class="w-full my-2 rounded-lg">
+          <div class="w-full rounded-lg my-1">
             <!-- if todo is in edit mode, do: -->
             {#if todoInEditMode === todo.id}
-              <form class="mx-2 my-[1px] flex flex-col" use:clickOutside on:click_outside={() => todoInEditMode = null}>
+              <form class="mx-2 my-1 flex flex-col" use:clickOutside on:click_outside={() => todoInEditMode = null}>
                 <div class="flex justify-between w-full bg-gray-100 p-2 rounded-l-lg rounded-tr-lg drop-shadow-lg">
                   <textarea 
                     style="resize: none;"
@@ -456,7 +456,7 @@
                     on:input={handleChangeTodoTitle}
                     use:focusOnElement />
                 </div>
-                <div class="flex self-end ml-2 bg-gray-100 rounded-b-lg pb-1 px-2 drop-shadow-lg">
+                <div class="flex self-end ml-2 mb-2 bg-gray-100 rounded-b-lg pb-1 px-2 drop-shadow-lg">
                   <OptionsWidget options={todoInEditModeOptions(todo.id)} />
                 </div>
               </form>
@@ -471,7 +471,7 @@
               <!-- Else display todo with options -->
             {:else}
               <DefaultTodoDisplay {todo} {expandedList}>
-                  <OptionsWidget options={defaultTodoOptions(todo.id)} />
+                <OptionsWidget options={defaultTodoOptions(todo.id)} />
               </DefaultTodoDisplay>
             {/if}
           </div>
@@ -481,17 +481,19 @@
       {/if}
       <!-- logic for handling "create todo" mode -->
       {#if inCreateTodoMode} 
-        <form class="mx-2 my-[1px] flex justify-between" use:clickOutside on:click_outside={() => {inCreateTodoMode = false}}>
-          <div class="border border-b-black flex justify-between w-full">
-            <input 
-              id="create-input"
+        <form class="m-2 flex flex-col justify-between" use:clickOutside on:click_outside={() => {inCreateTodoMode = false}}>
+          <div class="flex justify-between w-full bg-green-100 p-2 rounded-l-lg rounded-tr-lg drop-shadow-lg">
+            <textarea 
+              style="resize: none;"
+              rows=5
               data-testid="create-input"
-              class="bg-gray-200 m-[1px] pl-1 w-full"
-              placeholder="new todo title"
+              id="create-input"
+              class="bg-gray-50 m-[1px] pl-1 w-full outline-gray-200"
+              placeholder="new todo content"
               on:input={handleChangeNewTodoTitle}
               use:focusOnElement />
           </div>
-          <div class="flex items-center">
+          <div class="flex self-end bg-green-100 rounded-b-lg pb-1 px-2 drop-shadow-lg mb-2">
             <OptionsWidget options={createTodoOptions} />
           </div>
         </form>
