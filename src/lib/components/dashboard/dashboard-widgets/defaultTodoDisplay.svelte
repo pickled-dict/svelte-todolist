@@ -33,7 +33,7 @@
   {:else}
     <div class="relative">
       <button class="absolute right-[-10px] top-0 w-6 bg-gray-100 rounded-r-lg flex justify-end drop-shadow-lg" on:click={() => handleTodoExpanded(todo.id)}>
-        <Icon class="text-gray-800 w-[20px] h-[20px] mr-[1px]" icon="mdi:chevron-up" />
+        <Icon class="text-gray-800 w-[20px] h-[20px] mr-[1px]" icon="mdi:chevron-left" />
       </button>
     </div>
   {/if}
